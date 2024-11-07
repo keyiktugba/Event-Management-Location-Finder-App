@@ -1,0 +1,65 @@
+﻿@model Yazlab_2.Models.ViewModel.UserRegisterViewModel
+
+@{
+    ViewData["Title"] = "Kayıt Ol";
+}
+
+<h2>Yeni Hesap Oluştur</h2>
+
+<form asp-action="Register" method="post">
+    <div class="form-group">
+        <label for="FirstName">Ad</label>
+        <input type="text" class="form-control" id="FirstName" name="FirstName" value="@Model.FirstName" required />
+    </div>
+    <div class="form-group">
+        <label for="LastName">Soyad</label>
+        <input type="text" class="form-control" id="LastName" name="LastName" value="@Model.LastName" required />
+    </div>
+    <div class="form-group">
+        <label for="Username">Kullanıcı Adı</label>
+        <input type="text" class="form-control" id="Username" name="Username" value="@Model.Username" required />
+    </div>
+    <div class="form-group">
+        <label for="Email">E-posta</label>
+        <input type="email" class="form-control" id="Email" name="Email" value="@Model.Email" required />
+    </div>
+    <div class="form-group">
+        <label for="Password">Şifre</label>
+        <input type="password" class="form-control" id="Password" name="Password" required />
+    </div>
+    <div class="form-group">
+        <label for="ConfirmPassword">Şifreyi Onayla</label>
+        <input type="password" class="form-control" id="ConfirmPassword" name="ConfirmPassword" required />
+    </div>
+    <div class="form-group">
+        <label for="BirthDate">Doğum Tarihi</label>
+        <input type="date" class="form-control" id="BirthDate" name="BirthDate" value="@Model.BirthDate" required />
+    </div>
+    <div class="form-group">
+        <label for="Gender">Cinsiyet</label>
+        <select class="form-control" id="Gender" name="Gender" required>
+            <option value="">Seçiniz</option>
+            <option value="Male">Erkek</option>
+            <option value="Female">Kadın</option>
+            <option value="Other">Diğer</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="PhoneNumber">Telefon Numarası</label>
+        <input type="tel" class="form-control" id="PhoneNumber" name="PhoneNumber" value="@Model.PhoneNumber" required />
+    </div>
+    <div class="form-group">
+        <label for="Interests">İlgi Alanları</label>
+        <input type="text" class="form-control" id="Interests" name="Interests" value="@Model.Interests" />
+    </div>
+
+    <div class="form-group">
+        <label for="ProfilePicture">Profil Resmi URL'si</label>
+        <input type="text" class="form-control" id="ProfilePicture" name="ProfilePicture" value="@Model.ProfilePicture" placeholder="https://example.com/profil-resmi.jpg" />
+    </div>
+    <button type="submit" class="btn btn-primary">Kayıt Ol</button>
+</form>
+
+<div>
+    <p>Zaten bir hesabınız var mı? <a href="/Account/Login">Giriş Yapın</a></p>
+</div>

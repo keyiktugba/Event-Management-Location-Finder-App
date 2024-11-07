@@ -1,0 +1,23 @@
+﻿@model Yazlab_2.Models.ViewModel.UserLoginViewModel
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+<h2>Giriş Yap</h2>
+
+<form asp-action="Login" method="post">
+    <div class="form-group">
+        <label for="Username">Kullanıcı Adı</label>
+        <input type="text" class="form-control" id="Username" name="Username" value="@Model.Username" required />
+    </div>
+    <div class="form-group">
+        <label for="Password">Şifre</label>
+        <input type="password" class="form-control" id="Password" name="Password" required />
+    </div>
+    <button type="submit" class="btn btn-primary">Giriş Yap</button>
+</form>
+
+<div>
+    <p>Hesabınız yok mu? <a href="/Account/Register">Kayıt Olun</a></p>
+</div>
