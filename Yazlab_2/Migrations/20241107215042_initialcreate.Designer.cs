@@ -12,8 +12,8 @@ using Yazlab_2.Data;
 namespace Yazlab_2.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241107090311_InialCreate")]
-    partial class InialCreate
+    [Migration("20241107215042_initialcreate")]
+    partial class initialcreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -174,6 +174,9 @@ namespace Yazlab_2.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("CategoryID")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -183,10 +186,6 @@ namespace Yazlab_2.Migrations
 
                     b.Property<int>("EtkinlikSuresi")
                         .HasColumnType("int");
-
-                    b.Property<string>("Kategori")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Konum")
                         .IsRequired()
@@ -198,9 +197,101 @@ namespace Yazlab_2.Migrations
                     b.Property<DateTime>("Tarih")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("UserID")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("ID");
 
+                    b.HasIndex("CategoryID");
+
+                    b.HasIndex("UserID");
+
                     b.ToTable("Etkinlikler");
+                });
+
+            modelBuilder.Entity("Yazlab_2.Models.EntityBase.Interest", b =>
+                {
+                    b.Property<string>("ID")
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnOrder(0);
+
+                    b.Property<int>("CategoryID")
+                        .HasColumnType("int")
+                        .HasColumnOrder(1);
+
+                    b.Property<int>("InterestID")
+                        .HasColumnType("int");
+
+                    b.HasKey("ID", "CategoryID");
+
+                    b.HasIndex("CategoryID");
+
+                    b.ToTable("Ilgiler");
+                });
+
+            modelBuilder.Entity("Yazlab_2.Models.EntityBase.Kategori", b =>
+                {
+                    b.Property<int>("CategoryID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoryID"));
+
+                    b.Property<string>("CategoryName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("CategoryID");
+
+                    b.ToTable("Kategoriler");
+
+                    b.HasData(
+                        new
+                        {
+                            CategoryID = 1,
+                            CategoryName = "Futbol"
+                        },
+                        new
+                        {
+                            CategoryID = 2,
+                            CategoryName = "Voleybol"
+                        },
+                        new
+                        {
+                            CategoryID = 3,
+                            CategoryName = "Basketbol"
+                        },
+                        new
+                        {
+                            CategoryID = 4,
+                            CategoryName = "Yemek"
+                        },
+                        new
+                        {
+                            CategoryID = 5,
+                            CategoryName = "Konser"
+                        },
+                        new
+                        {
+                            CategoryID = 6,
+                            CategoryName = "Sinema"
+                        },
+                        new
+                        {
+                            CategoryID = 7,
+                            CategoryName = "Kitap"
+                        },
+                        new
+                        {
+                            CategoryID = 8,
+                            CategoryName = "Tiyatro"
+                        },
+                        new
+                        {
+                            CategoryID = 9,
+                            CategoryName = "Doğa Yürüyüşü"
+                        });
                 });
 
             modelBuilder.Entity("Yazlab_2.Models.EntityBase.Katilimci", b =>
@@ -228,9 +319,8 @@ namespace Yazlab_2.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MesajID"));
 
-                    b.Property<string>("AliciID")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("EtkinlikID")
+                        .HasColumnType("int");
 
                     b.Property<string>("GondericiID")
                         .IsRequired()
@@ -245,7 +335,7 @@ namespace Yazlab_2.Migrations
 
                     b.HasKey("MesajID");
 
-                    b.HasIndex("AliciID");
+                    b.HasIndex("EtkinlikID");
 
                     b.HasIndex("GondericiID");
 
@@ -267,7 +357,7 @@ namespace Yazlab_2.Migrations
 
                     b.HasKey("KullaniciID", "KazanilanTarih");
 
-                    b.ToTable("Puans");
+                    b.ToTable("Puanlar");
                 });
 
             modelBuilder.Entity("Yazlab_2.Models.EntityBase.User", b =>
@@ -297,10 +387,6 @@ namespace Yazlab_2.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Gender")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Interests")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -410,18 +496,56 @@ namespace Yazlab_2.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Yazlab_2.Models.EntityBase.Etkinlik", b =>
+                {
+                    b.HasOne("Yazlab_2.Models.EntityBase.Kategori", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Yazlab_2.Models.EntityBase.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Yazlab_2.Models.EntityBase.Interest", b =>
+                {
+                    b.HasOne("Yazlab_2.Models.EntityBase.Kategori", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Yazlab_2.Models.EntityBase.User", "User")
+                        .WithMany()
+                        .HasForeignKey("ID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Yazlab_2.Models.EntityBase.Katilimci", b =>
                 {
                     b.HasOne("Yazlab_2.Models.EntityBase.Etkinlik", "Etkinlik")
                         .WithMany()
                         .HasForeignKey("EtkinlikID")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Yazlab_2.Models.EntityBase.User", "Kullanici")
                         .WithMany()
                         .HasForeignKey("KullaniciID")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Etkinlik");
@@ -431,9 +555,9 @@ namespace Yazlab_2.Migrations
 
             modelBuilder.Entity("Yazlab_2.Models.EntityBase.Mesaj", b =>
                 {
-                    b.HasOne("Yazlab_2.Models.EntityBase.User", "Alici")
+                    b.HasOne("Yazlab_2.Models.EntityBase.Etkinlik", "Etkinlik")
                         .WithMany()
-                        .HasForeignKey("AliciID")
+                        .HasForeignKey("EtkinlikID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -443,7 +567,7 @@ namespace Yazlab_2.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Alici");
+                    b.Navigation("Etkinlik");
 
                     b.Navigation("Gonderici");
                 });

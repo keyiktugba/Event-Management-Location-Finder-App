@@ -33,7 +33,7 @@ namespace Yazlab_2.Controllers
                 if (await _userManager.IsInRoleAsync(user, "Admin"))
                 {
                    
-                    return RedirectToAction("", "Admin");
+                    return RedirectToAction("Dashboard", "Admin");
                 }
                 else if (await _userManager.IsInRoleAsync(user, "User"))
                 {
@@ -58,49 +58,104 @@ namespace Yazlab_2.Controllers
             return View(new UserLoginViewModel());
         }
 
-  
-        // Kayıt Sayfası
         [HttpGet]
         public IActionResult Register()
         {
-            return View(new UserRegisterViewModel());
+            // Kategorileri model olarak alıp register view'a gönderebiliriz
+            var categories = _context.Kategoriler.ToList();
+            ViewBag.Categories = categories;
+            return View();
         }
 
-        // Kayıt İşlemi
+        // Register POST
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(UserRegisterViewModel model)
         {
-          
+            if (ModelState.IsValid)
+            {
                 var user = new User
                 {
-                    UserName = model.Username,
+                    UserName = model.Email,
                     FirstName = model.FirstName,
                     LastName = model.LastName,
                     Email = model.Email,
                     BirthDate = model.BirthDate,
                     Gender = model.Gender,
                     PhoneNumber = model.PhoneNumber,
-                    Interests = model.Interests,
-                    ProfilePicture = model.ProfilePicture,
+                    ProfilePicture = model.ProfilePicture
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);
+                var selectedCategories = model.SelectedCategories;
                 if (result.Succeeded)
                 {
-                    // Kullanıcıya "User" rolünü ekleyin
-                    await _userManager.AddToRoleAsync(user, "User");
+                    // İlgi alanlarını ekleyelim
+                    if (model.SelectedCategories != null)
+                    {
+                        foreach (var categoryId in model.SelectedCategories)
+                        {
+                            var interest = new Interest
+                            {
+                                ID = user.Id,
+                                CategoryID = categoryId
+                            };
+                            _context.Ilgiler.Add(interest);
+                        }
+                        await _context.SaveChangesAsync();
+                    }
 
-                    return RedirectToAction("Login");
+                    // Kullanıcıyı otomatik olarak giriş yaptırmak
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+
+                    return RedirectToAction("Index", "Home"); // Kullanıcı giriş yaptıktan sonra yönlendirilecek sayfa
                 }
 
                 foreach (var error in result.Errors)
                 {
-                    ModelState.AddModelError("", error.Description);
+                    ModelState.AddModelError(string.Empty, error.Description);
                 }
-            
+            }
+
+            // Eğer model geçerli değilse, kategorilerle birlikte formu yeniden göster
+            var categories = _context.Kategoriler.ToList();
+            ViewBag.Categories = categories;
             return View(model);
-        }//buraya kodu atıcam dokunma
-    
+        }
+        // Kayıt İşlemi
+        /*  [HttpPost]
+          public async Task<IActionResult> Register(UserRegisterViewModel model)
+          {
+
+                  var user = new User
+                  {
+                      UserName = model.Username,
+                      FirstName = model.FirstName,
+                      LastName = model.LastName,
+                      Email = model.Email,
+                      BirthDate = model.BirthDate,
+                      Gender = model.Gender,
+                      PhoneNumber = model.PhoneNumber,
+                      ProfilePicture = model.ProfilePicture,
+                  };
+
+                  var result = await _userManager.CreateAsync(user, model.Password);
+                  if (result.Succeeded)
+                  {
+                      // Kullanıcıya "User" rolünü ekleyin
+                      await _userManager.AddToRoleAsync(user, "User");
+
+                      return RedirectToAction("Login");
+                  }
+
+                  foreach (var error in result.Errors)
+                  {
+                      ModelState.AddModelError("", error.Description);
+                  }
+
+              return View(model);
+          }//buraya kodu atıcam dokunma
+      */
 
         [HttpGet]
        public async Task<IActionResult> adminRegister()
@@ -116,7 +171,6 @@ namespace Yazlab_2.Controllers
                 BirthDate = DateTime.Now,
                 Gender = "Female",
                 PhoneNumber = "05315857939",
-                Interests = "spor",
                 ProfilePicture = ".",
             };
 

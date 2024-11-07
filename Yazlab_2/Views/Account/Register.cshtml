@@ -1,65 +1,89 @@
 ﻿@model Yazlab_2.Models.ViewModel.UserRegisterViewModel
 
 @{
-    ViewData["Title"] = "Kayıt Ol";
+    ViewData["Title"] = "Register";
 }
 
-<h2>Yeni Hesap Oluştur</h2>
+<h2>@ViewData["Title"]</h2>
 
-<form asp-action="Register" method="post">
+<form asp-action="Register" method="post" enctype="multipart/form-data">
+    <!-- Username Field -->
     <div class="form-group">
-        <label for="FirstName">Ad</label>
-        <input type="text" class="form-control" id="FirstName" name="FirstName" value="@Model.FirstName" required />
+        <label asp-for="Username"></label>
+        <input asp-for="Username" class="form-control" />
+        <span asp-validation-for="Username" class="text-danger"></span>
     </div>
+
+    <!-- FirstName Field -->
     <div class="form-group">
-        <label for="LastName">Soyad</label>
-        <input type="text" class="form-control" id="LastName" name="LastName" value="@Model.LastName" required />
+        <label asp-for="FirstName"></label>
+        <input asp-for="FirstName" class="form-control" />
+        <span asp-validation-for="FirstName" class="text-danger"></span>
     </div>
+
+    <!-- LastName Field -->
     <div class="form-group">
-        <label for="Username">Kullanıcı Adı</label>
-        <input type="text" class="form-control" id="Username" name="Username" value="@Model.Username" required />
+        <label asp-for="LastName"></label>
+        <input asp-for="LastName" class="form-control" />
+        <span asp-validation-for="LastName" class="text-danger"></span>
     </div>
+
+    <!-- Email Field -->
     <div class="form-group">
-        <label for="Email">E-posta</label>
-        <input type="email" class="form-control" id="Email" name="Email" value="@Model.Email" required />
+        <label asp-for="Email"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
     </div>
+
+    <!-- Password Field -->
     <div class="form-group">
-        <label for="Password">Şifre</label>
-        <input type="password" class="form-control" id="Password" name="Password" required />
+        <label asp-for="Password"></label>
+        <input asp-for="Password" class="form-control" type="password" />
+        <span asp-validation-for="Password" class="text-danger"></span>
     </div>
+
+    <!-- BirthDate Field -->
     <div class="form-group">
-        <label for="ConfirmPassword">Şifreyi Onayla</label>
-        <input type="password" class="form-control" id="ConfirmPassword" name="ConfirmPassword" required />
+        <label asp-for="BirthDate"></label>
+        <input asp-for="BirthDate" class="form-control" type="date" />
+        <span asp-validation-for="BirthDate" class="text-danger"></span>
     </div>
+
+    <!-- Gender Field -->
     <div class="form-group">
-        <label for="BirthDate">Doğum Tarihi</label>
-        <input type="date" class="form-control" id="BirthDate" name="BirthDate" value="@Model.BirthDate" required />
+        <label asp-for="Gender"></label>
+        <select asp-for="Gender" class="form-control">
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+        </select>
+        <span asp-validation-for="Gender" class="text-danger"></span>
     </div>
+
+    <!-- PhoneNumber Field -->
     <div class="form-group">
-        <label for="Gender">Cinsiyet</label>
-        <select class="form-control" id="Gender" name="Gender" required>
-            <option value="">Seçiniz</option>
-            <option value="Male">Erkek</option>
-            <option value="Female">Kadın</option>
-            <option value="Other">Diğer</option>
+        <label asp-for="PhoneNumber"></label>
+        <input asp-for="PhoneNumber" class="form-control" />
+        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+    </div>
+
+    <!-- ProfilePicture Field -->
+    <div class="form-group">
+        <label asp-for="ProfilePicture"></label>
+        <input asp-for="ProfilePicture" class="form-control" type="text" placeholder="Profile picture URL" />
+        <span asp-validation-for="ProfilePicture" class="text-danger"></span>
+    </div>
+
+    <!-- Categories Field -->
+    <div class="form-group">
+        <label>Select Categories of Interest</label>
+        <select asp-for="SelectedCategories" class="form-control" multiple>
+            @foreach (var category in ViewBag.Categories)
+            {
+                <option value="@category.CategoryID">@category.CategoryName</option>
+            }
         </select>
     </div>
-    <div class="form-group">
-        <label for="PhoneNumber">Telefon Numarası</label>
-        <input type="tel" class="form-control" id="PhoneNumber" name="PhoneNumber" value="@Model.PhoneNumber" required />
-    </div>
-    <div class="form-group">
-        <label for="Interests">İlgi Alanları</label>
-        <input type="text" class="form-control" id="Interests" name="Interests" value="@Model.Interests" />
-    </div>
 
-    <div class="form-group">
-        <label for="ProfilePicture">Profil Resmi URL'si</label>
-        <input type="text" class="form-control" id="ProfilePicture" name="ProfilePicture" value="@Model.ProfilePicture" placeholder="https://example.com/profil-resmi.jpg" />
-    </div>
-    <button type="submit" class="btn btn-primary">Kayıt Ol</button>
+    <button type="submit" class="btn btn-primary">Register</button>
 </form>
-
-<div>
-    <p>Zaten bir hesabınız var mı? <a href="/Account/Login">Giriş Yapın</a></p>
-</div>

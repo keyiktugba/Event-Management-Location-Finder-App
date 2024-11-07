@@ -33,7 +33,6 @@ namespace Yazlab_2.Models.EntityBase
 
         public string PhoneNumber { get; set; }
 
-        public string Interests { get; set; }
 
         public string ProfilePicture { get; set; }
 

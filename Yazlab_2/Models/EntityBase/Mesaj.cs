@@ -6,16 +6,15 @@
 
     public class Mesaj
     {
-        [Key]
         public int MesajID { get; set; }
 
         [ForeignKey("Gonderici")]
         public string GondericiID { get; set; }  // GondericiID'yi string olarak değiştirin
         public User Gonderici { get; set; }
 
-        [ForeignKey("Alici")]
-        public string AliciID { get; set; }  // AliciID'yi string olarak değiştirin
-        public User Alici { get; set; }
+        [ForeignKey("Etkinlik")]
+        public int EtkinlikID { get; set; }
+        public virtual Etkinlik Etkinlik { get; set; }
 
         [Required]
         public string MesajMetni { get; set; }

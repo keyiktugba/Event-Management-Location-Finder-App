@@ -1,5 +1,6 @@
 ﻿namespace Yazlab_2.Models.EntityBase
 {
+    using Microsoft.EntityFrameworkCore;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
 
@@ -14,5 +15,7 @@
         [ForeignKey("Etkinlik")]
         public int EtkinlikID { get; set; }
         public Etkinlik Etkinlik { get; set; }
+      
+
     }
 }
