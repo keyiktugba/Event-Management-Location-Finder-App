@@ -58,41 +58,7 @@ namespace Yazlab_2.Controllers
             return View(new UserLoginViewModel());
         }
 
-        // Giriş İşlemi
-        //[HttpPost]
-        //public async Task<IActionResult> Login(UserLoginViewModel model)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        var user = await _userManager.FindByNameAsync(model.Username);  // Username ile User'ı bul
-        //        if (user != null)
-        //        {
-        //            var result = await _signInManager.PasswordSignInAsync(user, model.Password, false, false);
-        //            if (result.Succeeded)
-        //            {
-        //                var claims = new List<Claim>
-        //                {
-        //                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-        //                    new Claim(ClaimTypes.Name, user.UserName),
-        //                    new Claim(ClaimTypes.Role, user.Role)
-        //                };
-
-        //                var identity = new ClaimsIdentity(claims, "login");
-        //                var principal = new ClaimsPrincipal(identity);
-        //                await HttpContext.SignInAsync(principal);
-
-        //                if (user.Role == "Admin")
-        //                {
-        //                    return RedirectToAction("Index", "Admin");
-        //                }
-        //                return RedirectToAction("Dashboard", "User");
-        //            }
-        //        }
-        //        ModelState.AddModelError("", "Kullanıcı adı veya şifre yanlış.");
-        //    }
-        //    return View(model);
-        //}
-
+  
         // Kayıt Sayfası
         [HttpGet]
         public IActionResult Register()
@@ -134,39 +100,45 @@ namespace Yazlab_2.Controllers
             
             return View(model);
         }//buraya kodu atıcam dokunma
-        [HttpPost]
-        public async Task<IActionResult> adminRegister(UserRegisterViewModel model)
+    
+
+        [HttpGet]
+       public async Task<IActionResult> adminRegister()
         {
 
+        
             var user = new User
             {
-                UserName =" Admin",
-                FirstName = "model.FirstName",
-                LastName = "model.LastName",
-                Email =" model.Email",
+                UserName ="Admins",
+                FirstName = "Admin",
+                LastName = "Admin",
+                Email ="admin@gmail.com",
                 BirthDate = DateTime.Now,
-                Gender = "model.Gender",
-                PhoneNumber = "model.PhoneNumber",
-                Interests = "model.Interests",
-                ProfilePicture = "model.ProfilePicture",
+                Gender = "Female",
+                PhoneNumber = "05315857939",
+                Interests = "spor",
+                ProfilePicture = ".",
             };
 
-            var result = await _userManager.CreateAsync(user, model.Password);
+            IdentityResult result = await _userManager.CreateAsync(user, "AWDj#BBGAq2q2C");
             if (result.Succeeded)
             {
-                // Kullanıcıya "User" rolünü ekleyin
-                await _userManager.AddToRoleAsync(user, "User");
-
-                return RedirectToAction("Login");
+                await _userManager.AddToRoleAsync(user, "Admin");
+                return Json(new { success = true, message = "Kayıt Başarılı", redirectUrl = Url.Action("AdminProfile", "Admin") });
             }
-
-            foreach (var error in result.Errors)
+            else
             {
-                ModelState.AddModelError("", error.Description);
+                // Hataları loglayın veya kullanıcıya gösterin
+                foreach (var error in result.Errors)
+                {
+                    Console.WriteLine(error.Description);  // Hataları loglar
+                    ModelState.AddModelError("", error.Description);  // Hataları ModelState'e ekler
+                }
+                return Json(new { success = false, message = "Kayıt Başarısız", errors = result.Errors.Select(e => e.Description).ToList() });
             }
 
-            return View(model);
         }
+
         // Çıkış Yapma
         public async Task<IActionResult> Logout()
         {
@@ -175,4 +147,3 @@ namespace Yazlab_2.Controllers
         }
     }
 }
-//deneme

@@ -1,0 +1,41 @@
+﻿@model List<Yazlab_2.Models.EntityBase.User>
+
+<h2>Admin Paneli</h2>
+
+<h3>Kullanıcılar</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Ad</th>
+            <th>Email</th>
+            <th>Telefon</th>
+            <th>İşlem</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.UserName</td>
+                <td>@user.Email</td>
+                <td>@user.PhoneNumber</td>
+                <td>
+                    <form method="post" action="@Url.Action("DeleteUser", "Admin")">
+                        <input type="hidden" name="userId" value="@user.Id" />
+                        <button type="submit" class="btn btn-danger">Sil</button>
+                    </form>
+                    <a href="@Url.Action("EditUser", "Admin", new { userId = user.Id })" class="btn btn-primary">Düzenle</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}

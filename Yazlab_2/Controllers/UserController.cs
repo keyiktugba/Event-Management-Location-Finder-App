@@ -23,69 +23,7 @@ namespace Yazlab_2.Controllers
             _signInManager = signInManager;
         }
 
-        // Giriş Sayfası
-        [HttpGet]
-        public IActionResult Login()
-        {
-            return View(new UserLoginViewModel());
-        }
-
-        // Giriş İşlemi
-        //[HttpPost]
-        //public async Task<IActionResult> Login(UserLoginViewModel model)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        var user = await _userManager.FindByNameAsync(model.Username);
-        //        if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
-        //        {
-        //            var claims = new List<Claim>
-        //            {
-        //                new Claim(ClaimTypes.NameIdentifier, user.Id),
-        //                new Claim(ClaimTypes.Name, user.UserName),
-        //            };
-
-        //            var identity = new ClaimsIdentity(claims, "login");
-        //            var principal = new ClaimsPrincipal(identity);
-        //            await _signInManager.SignInAsync(user, false); // Kullanıcıyı giriş yaptır
-
-        //            if (user.Role == "Admin")
-        //            {
-        //                return RedirectToAction("Dashboard", "Admin");
-        //            }
-
-        //            return RedirectToAction("Dashboard");
-        //        }
-        //        ModelState.AddModelError("", "Kullanıcı adı veya şifre yanlış.");
-        //    }
-        //    return View(model);
-        //}
-
-        // Kayıt Sayfası
-        [HttpGet]
-        public IActionResult Register()
-        {
-            return View(new UserRegisterViewModel());
-        }
-
-        // Kayıt İşlemi
-        [HttpPost]
       
-
-
-        // Kullanıcı Profili Görüntüleme
-        [Authorize(Roles = "User")]
-        public IActionResult Dashboard()
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var user = _context.Users.FirstOrDefault(u => u.Id == userId);
-
-            if (user != null)
-            {
-                return View("Profile", user);
-            }
-            return NotFound("Kullanıcı bulunamadı.");
-        }
 
         // Profil Güncelleme İşlemi
         [HttpPost]
@@ -123,12 +61,6 @@ namespace Yazlab_2.Controllers
             return View(model);
         }
 
-        // Çıkış Yapma İşlemi
-        [Authorize]
-        public async Task<IActionResult> Logout()
-        {
-            await _signInManager.SignOutAsync(); // Çıkış işlemi
-            return RedirectToAction("Login");
-        }
+     
     }
 }
