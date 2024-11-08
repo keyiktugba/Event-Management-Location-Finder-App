@@ -9,12 +9,7 @@ namespace Yazlab_2.Models.EntityBase
     {
        
 
-       // [Required]
-     //   public string Username { get; set; }
-
-       // [Required]
-       // [DataType(DataType.Password)]
-      //  public string Password { get; set; }
+      
 
         [Required]
         public string FirstName { get; set; }
@@ -22,9 +17,7 @@ namespace Yazlab_2.Models.EntityBase
         [Required]
         public string LastName { get; set; }
 
-       // [Required]
-       // [DataType(DataType.EmailAddress)]
-       // public string Email { get; set; }
+   
 
         [DataType(DataType.Date)]
         public DateTime BirthDate { get; set; }
@@ -35,7 +28,7 @@ namespace Yazlab_2.Models.EntityBase
 
 
         public string ProfilePicture { get; set; }
-
+        public string Konum { get; set; }
     
     }
 

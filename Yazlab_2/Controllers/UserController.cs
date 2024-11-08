@@ -43,7 +43,7 @@ namespace Yazlab_2.Controllers
                     user.BirthDate = model.BirthDate;
                     user.Gender = model.Gender;
                     user.PhoneNumber = model.PhoneNumber;
-                   
+                   user.Konum= model.Konum;
                     user.ProfilePicture = model.ProfilePicture;
 
                     var result = await _userManager.UpdateAsync(user);

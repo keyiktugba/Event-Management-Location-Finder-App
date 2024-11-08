@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 using Yazlab_2.Data;
 using Yazlab_2.Models.EntityBase;
+using Yazlab_2.Models.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,7 @@ builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfi
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddSingleton<EmailService>();
 // Program.cs veya Startup.cs (ConfigureServices metodu)
 
 
@@ -58,72 +60,3 @@ app.MapControllerRoute(
 
 app.Run();
 
-/*
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Yazlab_2.Data;
-using Yazlab_2.Models.EntityBase;
-
-var builder = WebApplication.CreateBuilder(args);
-
-// Veritabaný baðlantý dizesi ve Entity Framework yapýlandýrmasý
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Identity ve kullanýcý yönetimi
-builder.Services.AddIdentity<User, IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
-
-// Diðer servisleri yapýlandýrma (örneðin, MVC, Razor Pages, vb.)
-builder.Services.AddControllersWithViews();
-
-var app = builder.Build();
-
-// Uygulama baþlatýldýðýnda rollerin oluþturulmasý
-using (var scope = app.Services.CreateScope())
-{
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
-
-    string[] roleNames = { "Admin", "User" };
-    foreach (var roleName in roleNames)
-    {
-        var roleExist = await roleManager.RoleExistsAsync(roleName);
-        if (!roleExist)
-        {
-            await roleManager.CreateAsync(new IdentityRole(roleName));
-        }
-    }
-
-    // Admin kullanýcýsýný oluþtur
-    var adminUser = await userManager.FindByEmailAsync("admin@example.com");
-    if (adminUser == null)
-    {
-        adminUser = new User
-        { 
-            UserName = "admin",
-            Email = "admin@example.com",
-            FirstName = "Admin",
-            LastName = "User",
-            Gender = "Male",
-            Interests = "null",
-            PhoneNumber = "00000000",
-            ProfilePicture = "gvkg",
-           
-        };
-
-        var result = await userManager.CreateAsync(adminUser, "Admin123!");
-        if (result.Succeeded)
-        {
-            await userManager.AddToRoleAsync(adminUser, "Admin");
-        }
-    }
-}
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Account}/{action=Login}/{id?}");
-
-
-app.Run();
-*/

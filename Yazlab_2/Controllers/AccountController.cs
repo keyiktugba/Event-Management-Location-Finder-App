@@ -7,6 +7,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
+using Yazlab_2.Models.Service;
 
 namespace Yazlab_2.Controllers
 {
@@ -15,12 +16,13 @@ namespace Yazlab_2.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<User> _userManager;  // UserManager eklenmeli
         private readonly SignInManager<User> _signInManager;  // SignInManager eklenmeli
-
-        public AccountController(ApplicationDbContext context, UserManager<User> userManager, SignInManager<User> signInManager)
+        private readonly EmailService _emailService;
+        public AccountController(ApplicationDbContext context, UserManager<User> userManager, SignInManager<User> signInManager, EmailService emailService)
         {
             _context = context;
             _userManager = userManager;
             _signInManager = signInManager;
+            _emailService = emailService;
         }
         [HttpPost]
         public async Task<IActionResult> Login(UserLoginViewModel model)
@@ -32,7 +34,7 @@ namespace Yazlab_2.Controllers
 
                 if (await _userManager.IsInRoleAsync(user, "Admin"))
                 {
-                   
+
                     return RedirectToAction("Dashboard", "Admin");
                 }
                 else if (await _userManager.IsInRoleAsync(user, "User"))
@@ -40,7 +42,7 @@ namespace Yazlab_2.Controllers
                     TempData["SuccessMessage"] = "Hoşgeldin";
                     return RedirectToAction("", "User", new { Username = model.Username });
                 }
-                
+
                 else
                 {
                     TempData["ErrorMessage"] = "Giriş başarısız.";
@@ -48,7 +50,7 @@ namespace Yazlab_2.Controllers
                 }
             }
 
-           
+
             return RedirectToAction("Login");
         }
         // Giriş Sayfası
@@ -83,7 +85,8 @@ namespace Yazlab_2.Controllers
                     BirthDate = model.BirthDate,
                     Gender = model.Gender,
                     PhoneNumber = model.PhoneNumber,
-                    ProfilePicture = model.ProfilePicture
+                    ProfilePicture = model.ProfilePicture,
+                    Konum=model.Konum
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);
@@ -122,52 +125,18 @@ namespace Yazlab_2.Controllers
             ViewBag.Categories = categories;
             return View(model);
         }
-        // Kayıt İşlemi
-        /*  [HttpPost]
-          public async Task<IActionResult> Register(UserRegisterViewModel model)
-          {
-
-                  var user = new User
-                  {
-                      UserName = model.Username,
-                      FirstName = model.FirstName,
-                      LastName = model.LastName,
-                      Email = model.Email,
-                      BirthDate = model.BirthDate,
-                      Gender = model.Gender,
-                      PhoneNumber = model.PhoneNumber,
-                      ProfilePicture = model.ProfilePicture,
-                  };
-
-                  var result = await _userManager.CreateAsync(user, model.Password);
-                  if (result.Succeeded)
-                  {
-                      // Kullanıcıya "User" rolünü ekleyin
-                      await _userManager.AddToRoleAsync(user, "User");
-
-                      return RedirectToAction("Login");
-                  }
-
-                  foreach (var error in result.Errors)
-                  {
-                      ModelState.AddModelError("", error.Description);
-                  }
-
-              return View(model);
-          }//buraya kodu atıcam dokunma
-      */
 
         [HttpGet]
-       public async Task<IActionResult> adminRegister()
+        public async Task<IActionResult> adminRegister()
         {
 
-        
+
             var user = new User
             {
-                UserName ="Admins",
+                UserName = "Admins",
                 FirstName = "Admin",
                 LastName = "Admin",
-                Email ="admin@gmail.com",
+                Email = "admin@gmail.com",
                 BirthDate = DateTime.Now,
                 Gender = "Female",
                 PhoneNumber = "05315857939",
@@ -199,5 +168,108 @@ namespace Yazlab_2.Controllers
             await HttpContext.SignOutAsync();
             return RedirectToAction("Login");
         }
+
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View(new ForgotPasswordViewModel());
+        }
+
+    
+        [HttpPost]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                // Reset link oluşturulması
+                string resetLink = "https://yourapp.com/resetpassword?token=12345"; // Burada linki dinamik yapmalısınız.
+
+                // Şifre sıfırlama e-posta gönderme
+                await _emailService.SendResetPasswordEmail(model.Email, resetLink);
+
+                return RedirectToAction("ForgotPasswordConfirmation");
+            }
+
+            return View(model);
+        }
+        [HttpGet]
+        public IActionResult ForgotPasswordConfirmation()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword(string token, string email)
+        {
+            var model = new ResetPasswordViewModel { Token = token, Email = email };
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                ModelState.AddModelError(string.Empty, "Geçersiz işlem.");
+                return View(model);
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.Password);
+            if (result.Succeeded)
+            {
+                TempData["Message"] = "Şifreniz başarıyla sıfırlandı.";
+                return RedirectToAction("Login");
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return View(model);
+        }
     }
+
 }
+
+// Kayıt İşlemi
+/*  [HttpPost]
+  public async Task<IActionResult> Register(UserRegisterViewModel model)
+  {
+
+          var user = new User
+          {
+              UserName = model.Username,
+              FirstName = model.FirstName,
+              LastName = model.LastName,
+              Email = model.Email,
+              BirthDate = model.BirthDate,
+              Gender = model.Gender,
+              PhoneNumber = model.PhoneNumber,
+              ProfilePicture = model.ProfilePicture,
+          };
+
+          var result = await _userManager.CreateAsync(user, model.Password);
+          if (result.Succeeded)
+          {
+              // Kullanıcıya "User" rolünü ekleyin
+              await _userManager.AddToRoleAsync(user, "User");
+
+              return RedirectToAction("Login");
+          }
+
+          foreach (var error in result.Errors)
+          {
+              ModelState.AddModelError("", error.Description);
+          }
+
+      return View(model);
+  }//buraya kodu atıcam dokunma
+*/
