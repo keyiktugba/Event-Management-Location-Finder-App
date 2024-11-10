@@ -1,0 +1,22 @@
+﻿@model List<Yazlab_2.Models.EntityBase.Etkinlik>
+
+<h3>Katıldığınız Etkinlikler</h3>
+<div class="row">
+    @foreach (var etkinlik in Model)
+    {
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">@etkinlik.EtkinlikAdi</h5>
+                    <p class="card-text">@etkinlik.Aciklama</p>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            @etkinlik.Tarih.ToString("dd MMM yyyy") - @etkinlik.Saat.ToString(@"hh\:mm")
+                        </small>
+                    </p>
+                    <a href="@Url.Action("Messages", "User", new { eventId = etkinlik.ID })" class="btn btn-info">Mesajlar</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

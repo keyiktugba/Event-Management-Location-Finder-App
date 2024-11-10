@@ -1,0 +1,23 @@
+﻿@model Yazlab_2.Models.ViewModel.EventMessagesViewModel
+
+<h3>@Model.EventName Etkinliği Mesajları</h3>
+
+<div class="messages">
+    @foreach (var message in Model.Messages)
+    {
+        <div class="message">
+            <strong>@message.Gonderici.FirstName @message.Gonderici.LastName</strong>
+            <p>@message.MesajMetni</p>
+            <small>@message.GonderimZamani.ToString("dd MMM yyyy HH:mm")</small>
+        </div>
+    }
+</div>
+
+<h4>Yeni Mesaj Gönder</h4>
+<form asp-action="SendMessage" method="post">
+    <input type="hidden" name="eventId" value="@Model.EventId" />
+    <div class="form-group">
+        <textarea name="message" class="form-control" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Gönder</button>
+</form>

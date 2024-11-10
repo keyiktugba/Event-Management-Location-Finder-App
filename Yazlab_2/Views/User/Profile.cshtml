@@ -1,0 +1,113 @@
+﻿@model Yazlab_2.Models.ViewModel.ProfileViewModel
+
+<h2>Profilim</h2>
+
+<form asp-action="Profile" method="post" enctype="multipart/form-data">
+    <div class="profile-picture-container">
+        <img src="@(Model.User.ProfilePicture ?? "/images/default-profile.png")" alt="Profile Picture" class="profile-picture" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="User.FirstName"></label>
+        <input asp-for="User.FirstName" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="User.LastName"></label>
+        <input asp-for="User.LastName" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="User.Email"></label>
+        <input asp-for="User.Email" class="form-control" type="email" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="User.BirthDate"></label>
+        <input asp-for="User.BirthDate" class="form-control" type="date" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="User.Gender"></label>
+        <select asp-for="User.Gender" class="form-control">
+            <option value="Male">Erkek</option>
+            <option value="Female">Kadın</option>
+            <option value="Other">Diğer</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="User.PhoneNumber"></label>
+        <input asp-for="User.PhoneNumber" class="form-control" type="tel" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="User.Konum"></label>
+        <input asp-for="User.Konum" class="form-control" />
+    </div>
+
+ 
+</form>
+
+<h3>Tüm Etkinlikler</h3>
+
+<div class="row">
+    @foreach (var etkinlik in Model.Events)
+    {
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">@etkinlik.EtkinlikAdi</h5>
+                    <p class="card-text">@etkinlik.Aciklama</p>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            @etkinlik.Tarih.ToString("dd MMM yyyy") - @etkinlik.Saat.ToString(@"hh\:mm")
+                        </small>
+                    </p>
+                    <form asp-action="JoinEvent" asp-controller="User" method="post">
+                        <input type="hidden" name="eventId" value="@etkinlik.ID" />
+                        <button type="submit" class="btn btn-success btn-sm">Katıl</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+<div class="mb-3">
+    <a asp-action="EditUser" asp-controller="User" asp-route-userId="@(Model.User.Id)" class="btn btn-warning">Profili Düzenle</a>
+</div>
+
+<!-- Etkinlik oluştur butonu -->
+<div class="mb-3">
+    <a asp-action="Olustur" asp-controller="User" class="btn btn-primary">Etkinlik Oluştur</a>
+</div>
+
+<!-- Kendi Etkinliklerim Butonu -->
+<div class="mb-3">
+    <a asp-action="Myevents" asp-controller="User" class="btn btn-info">Kendi Etkinliklerim</a>
+</div>
+<div class="mb-3">
+ <a asp-controller="Map" asp-action="Index" class="btn btn-primary">
+            <i class="bi bi-map"></i> Harita </a>
+</div>
+
+<div class="mb-3">
+    <a asp-action="JoinedEvents" asp-controller="User" class="btn btn-info">Mesajlaşma</a>
+</div>
+<style>
+    .profile-picture-container {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .profile-picture {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+    }
+
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: bold;
+    }
+</style>

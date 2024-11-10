@@ -29,7 +29,7 @@ namespace Yazlab_2.Models.EntityBase
 
         public string ProfilePicture { get; set; }
         public string Konum { get; set; }
-    
+      
     }
 
 

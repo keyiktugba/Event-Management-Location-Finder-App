@@ -5,8 +5,7 @@ namespace Yazlab_2.Models.EntityBase
 {
     public class Interest
     {
-        [Key]
-        public int InterestID { get; set; }
+   
 
         [Key, Column(Order = 0)]
         [ForeignKey("User")]

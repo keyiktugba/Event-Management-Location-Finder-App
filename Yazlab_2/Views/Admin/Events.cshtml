@@ -1,0 +1,50 @@
+﻿@model IEnumerable<Yazlab_2.Models.EntityBase.Etkinlik>
+@{
+    ViewBag.Title = "Tüm Etkinlikler";
+}
+
+<h2>Tüm Etkinlikler</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Etkinlik Adı</th>
+            <th>Açıklama</th>
+            <th>Kategori</th>
+            <th>Oluşturan Kullanıcı</th>
+            <th>Tarih</th>
+            <th>Onay Durumu</th>
+            <th>İşlemler</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var etkinlik in Model)
+        {
+            <tr>
+                <td>@etkinlik.EtkinlikAdi</td>
+                <td>@etkinlik.Aciklama</td>
+                <td>@etkinlik.Category?.CategoryName</td>
+                <td>@etkinlik.User?.UserName</td>
+                <td>@etkinlik.Tarih.ToShortDateString()</td>
+                <td>@(etkinlik.IsApproved ? "Onaylı" : "Onaysız")</td>
+                <td>
+                    <form asp-action="DeleteEvent" asp-controller="Admin" method="post" style="display:inline;">
+                        <input type="hidden" name="id" value="@etkinlik.ID" />
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Bu etkinliği silmek istediğinize emin misiniz?');">
+                            Sil
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}

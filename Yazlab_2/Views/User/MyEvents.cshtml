@@ -1,0 +1,36 @@
+﻿@model IEnumerable<Yazlab_2.Models.EntityBase.Etkinlik>
+
+<h2>Oluşturduğum Etkinlikler</h2>
+
+@if (!Model.Any())
+{
+    <p>Henüz bir etkinlik oluşturmadınız.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Etkinlik Adı</th>
+                <th>Tarih</th>
+                <th>Saat</th>
+                <th>Konum</th>
+                <th>Detaylar</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var etkinlik in Model)
+            {
+                <tr>
+                    <td>@etkinlik.EtkinlikAdi</td>
+                    <td>@etkinlik.Tarih.ToString("dd.MM.yyyy")</td>
+                    <td>@etkinlik.Saat</td>
+                    <td>@etkinlik.Konum</td>
+                    <td>
+                        <a asp-action="Details" asp-controller="Etkinlik" asp-route-id="@etkinlik.ID">Görüntüle</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

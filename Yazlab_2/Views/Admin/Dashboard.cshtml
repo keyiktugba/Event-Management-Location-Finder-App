@@ -24,7 +24,7 @@
                         <input type="hidden" name="userId" value="@user.Id" />
                         <button type="submit" class="btn btn-danger">Sil</button>
                     </form>
-                    <a href="@Url.Action("EditUser", "Admin", new { userId = user.Id })" class="btn btn-primary">Düzenle</a>
+                
                 </td>
             </tr>
         }
@@ -39,3 +39,7 @@
 {
     <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
 }
+<!-- Kendi Etkinliklerim Butonu -->
+<div class="mb-3">
+    <a asp-action="PendingEvents" asp-controller="Admin" class="btn btn-info">Onaylanıcak Etkinliklerim</a>
+</div>

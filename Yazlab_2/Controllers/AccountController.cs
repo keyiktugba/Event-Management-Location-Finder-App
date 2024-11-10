@@ -40,7 +40,7 @@ namespace Yazlab_2.Controllers
                 else if (await _userManager.IsInRoleAsync(user, "User"))
                 {
                     TempData["SuccessMessage"] = "Hoşgeldin";
-                    return RedirectToAction("", "User", new { Username = model.Username });
+                    return RedirectToAction("Profile", "User", new { userId = user.Id });
                 }
 
                 else
@@ -68,63 +68,135 @@ namespace Yazlab_2.Controllers
             ViewBag.Categories = categories;
             return View();
         }
-
-        // Register POST
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(UserRegisterViewModel model)
         {
             if (ModelState.IsValid)
             {
+                // Yeni kullanıcı oluşturuluyor
                 var user = new User
                 {
-                    UserName = model.Email,
+                    UserName = model.Username,
                     FirstName = model.FirstName,
                     LastName = model.LastName,
                     Email = model.Email,
                     BirthDate = model.BirthDate,
                     Gender = model.Gender,
                     PhoneNumber = model.PhoneNumber,
-                    ProfilePicture = model.ProfilePicture,
-                    Konum=model.Konum
+                    Konum = model.Konum
                 };
 
-                var result = await _userManager.CreateAsync(user, model.Password);
-                var selectedCategories = model.SelectedCategories;
-                if (result.Succeeded)
+                // Profil fotoğrafı yüklenmişse, dosyayı kaydediyoruz
+                if (model.ProfilePicture != null && model.ProfilePicture.Length > 0)
                 {
-                    // İlgi alanlarını ekleyelim
-                    if (model.SelectedCategories != null)
+                    // Dosya adı için benzersiz bir GUID oluşturuluyor
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(model.ProfilePicture.FileName);
+
+                    // Yüklemek için hedef dizini belirliyoruz
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+
+                    // Eğer klasör yoksa oluşturuyoruz
+                    if (!Directory.Exists(uploadsFolder))
                     {
-                        foreach (var categoryId in model.SelectedCategories)
-                        {
-                            var interest = new Interest
-                            {
-                                ID = user.Id,
-                                CategoryID = categoryId
-                            };
-                            _context.Ilgiler.Add(interest);
-                        }
-                        await _context.SaveChangesAsync();
+                        Directory.CreateDirectory(uploadsFolder);
                     }
 
-                    // Kullanıcıyı otomatik olarak giriş yaptırmak
-                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    // Dosyanın tam yolunu belirliyoruz
+                    var filePath = Path.Combine(uploadsFolder, fileName);
 
-                    return RedirectToAction("Index", "Home"); // Kullanıcı giriş yaptıktan sonra yönlendirilecek sayfa
+                    // Dosyayı hedef dizine kaydediyoruz
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await model.ProfilePicture.CopyToAsync(stream);
+                    }
+
+                    // Dosya yolunu veritabanına kaydedilmek üzere modelde saklıyoruz
+                    user.ProfilePicture = "/uploads/" + fileName;
                 }
 
+                // Kullanıcıyı veritabanına kaydediyoruz
+                var result = await _userManager.CreateAsync(user, model.Password);
+                if (result.Succeeded)
+                {
+                    // İlgi alanları, roller ve kullanıcı girişi işlemleri
+                    await _userManager.AddToRoleAsync(user, "User");
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    return RedirectToAction("Index", "Home");
+                }
+
+                // Hata varsa, ModelState'e ekliyoruz
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
             }
 
-            // Eğer model geçerli değilse, kategorilerle birlikte formu yeniden göster
+            // Kategorileri alıp view'a gönderiyoruz
             var categories = _context.Kategoriler.ToList();
             ViewBag.Categories = categories;
+
             return View(model);
         }
+
+
+        // Register POST
+        /*   [HttpPost]
+           [ValidateAntiForgeryToken]
+           public async Task<IActionResult> Register(UserRegisterViewModel model)
+           {
+               if (ModelState.IsValid)
+               {
+                   var user = new User
+                   {
+                       UserName = model.Username,
+                       FirstName = model.FirstName,
+                       LastName = model.LastName,
+                       Email = model.Email,
+                       BirthDate = model.BirthDate,
+                       Gender = model.Gender,
+                       PhoneNumber = model.PhoneNumber,
+                       ProfilePicture = model.ProfilePicture,
+                       Konum=model.Konum
+                   };
+
+                   var result = await _userManager.CreateAsync(user, model.Password);
+                   var selectedCategories = model.SelectedCategories;
+                   if (result.Succeeded)
+                   {
+                       // İlgi alanlarını ekleyelim
+                       if (model.SelectedCategories != null)
+                       {
+                           foreach (var categoryId in model.SelectedCategories)
+                           {
+                               var interest = new Interest
+                               {
+                                   ID = user.Id,
+                                   CategoryID = categoryId
+                               };
+                               _context.Ilgiler.Add(interest);
+                           }
+                           await _context.SaveChangesAsync();
+                       }
+
+                       await _userManager.AddToRoleAsync(user, "User");
+                       // Kullanıcıyı otomatik olarak giriş yaptırmak
+                       await _signInManager.SignInAsync(user, isPersistent: false);
+                       return RedirectToAction("Index", "Home");
+
+                   }
+
+                   foreach (var error in result.Errors)
+                   {
+                       ModelState.AddModelError(string.Empty, error.Description);
+                   }
+               }
+
+               // Eğer model geçerli değilse, kategorilerle birlikte formu yeniden göster
+               var categories = _context.Kategoriler.ToList();
+               ViewBag.Categories = categories;
+               return View(model);
+           }*/
 
         [HttpGet]
         public async Task<IActionResult> adminRegister()
@@ -140,7 +212,7 @@ namespace Yazlab_2.Controllers
                 BirthDate = DateTime.Now,
                 Gender = "Female",
                 PhoneNumber = "05315857939",
-                ProfilePicture = ".",
+               // ProfilePicture = ".",
             };
 
             IdentityResult result = await _userManager.CreateAsync(user, "AWDj#BBGAq2q2C");

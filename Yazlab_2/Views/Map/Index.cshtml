@@ -1,0 +1,21 @@
+﻿<h2>OpenStreetMap</h2>
+<div id="map" style="height: 500px; width: 100%;"></div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+<script>
+    var konum = "@ViewData["Konum"]"; // Konum bilgisini ViewData'dan alın
+    var coordinates = konum.split(','); // Konumu lat, lng olarak ayırın
+
+    var map = L.map('map').setView([parseFloat(coordinates[0]), parseFloat(coordinates[1])], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Konum için bir işaretleyici ekleyin
+    L.marker([parseFloat(coordinates[0]), parseFloat(coordinates[1])]).addTo(map)
+        .bindPopup("Kullanıcının Konumu").openPopup();
+</script>

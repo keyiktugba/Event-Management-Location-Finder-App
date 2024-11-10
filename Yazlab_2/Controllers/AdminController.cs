@@ -4,6 +4,7 @@ using Yazlab_2.Data;
 using Yazlab_2.Models;
 using System.Linq;
 using Yazlab_2.Models.EntityBase;
+using Microsoft.EntityFrameworkCore;
 
 namespace Yazlab_2.Controllers
 {
@@ -43,37 +44,65 @@ namespace Yazlab_2.Controllers
             return RedirectToAction("Dashboard");
         }
 
-        // Kullanıcı Düzenleme
-        [HttpGet]
-        public IActionResult EditUser(string userId)
+   
+
+
+        public IActionResult PendingEvents()
         {
-            var user = _context.Users.FirstOrDefault(u => u.Id == userId);
-            if (user == null)
-            {
-                return NotFound();
-            }
-            return View(user);
+            var pendingEvents = _context.Etkinlikler
+                .Where(e => e.IsApproved == false)
+                .Include(e => e.Category)
+                .Include(e => e.User)
+                .ToList();
+            return View(pendingEvents);
         }
+    
 
         [HttpPost]
-        public IActionResult EditUser(User user)
+        public IActionResult ApproveEvent(int id)
         {
-            var existingUser = _context.Users.FirstOrDefault(u => u.Id == user.Id);
-            if (existingUser != null)
+            var etkinlik = _context.Etkinlikler.FirstOrDefault(e => e.ID == id);
+            if (etkinlik != null)
             {
-                existingUser.UserName = user.UserName;
-                existingUser.Email = user.Email;
-                existingUser.PhoneNumber = user.PhoneNumber;
-                // Diğer alanları da güncellemek için benzer şekilde ekleyebilirsiniz.
-
+                etkinlik.IsApproved = true;
                 _context.SaveChanges();
-                TempData["SuccessMessage"] = "Kullanıcı başarıyla güncellendi!";
-                return RedirectToAction("Dashboard");
+                TempData["SuccessMessage"] = "Etkinlik başarıyla onaylandı!";
             }
-            return View(user);
+            else
+            {
+                TempData["ErrorMessage"] = "Etkinlik bulunamadı!";
+            }
+            return RedirectToAction("PendingEvents");
+        }
+        // Tüm Etkinlikleri Görüntüleme (GET)
+        [HttpGet]
+        public IActionResult Events()
+        {
+            var events = _context.Etkinlikler
+                .Include(e => e.Category)
+                .Include(e => e.User)
+                .ToList();
+            return View(events); // View'e gönder
         }
 
-   
-   
+        // Etkinlik Silme (POST)
+        [HttpPost]
+        public IActionResult DeleteEvent(int id)
+        {
+            var etkinlik = _context.Etkinlikler.FirstOrDefault(e => e.ID == id);
+            if (etkinlik != null)
+            {
+                _context.Etkinlikler.Remove(etkinlik);
+                _context.SaveChanges();
+                TempData["SuccessMessage"] = "Etkinlik başarıyla silindi!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Etkinlik bulunamadı!";
+            }
+            return RedirectToAction("Events");
+        }
+
+
     }
 }

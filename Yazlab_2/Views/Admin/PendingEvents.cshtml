@@ -1,0 +1,45 @@
+﻿@model IEnumerable<Yazlab_2.Models.EntityBase.Etkinlik>
+@{
+    ViewData["Title"] = "Pending Events";
+}
+
+<h2>Onaylanacak Etkinlikler</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Etkinlik Adı</th>
+            <th>Açıklama</th>
+            <th>Tarih</th>
+            <th>Saat</th>
+            <th>Konum</th>
+            <th>Kategori</th>
+            <th>Kullanıcı</th>
+            <th>Onay</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var etkinlik in Model)
+        {
+            <tr>
+                <td>@etkinlik.EtkinlikAdi</td>
+                <td>@etkinlik.Aciklama</td>
+                <td>@etkinlik.Tarih.ToShortDateString()</td>
+                <td>@etkinlik.Saat</td>
+                <td>@etkinlik.Konum</td>
+                <td>@etkinlik.Category.CategoryName</td>
+                <td>@etkinlik.User.UserName</td>
+                <td>
+                    <form asp-action="ApproveEvent" asp-controller="Admin" method="post">
+                        <input type="hidden" name="id" value="@etkinlik.ID" />
+                        <button type="submit" class="btn btn-success">Onayla</button>
+                    </form>
+                    <form asp-action="RejectEvent" asp-controller="Admin" method="post" style="display:inline;">
+                        <input type="hidden" name="id" value="@etkinlik.ID" />
+                        <button type="submit" class="btn btn-danger">Reddet</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

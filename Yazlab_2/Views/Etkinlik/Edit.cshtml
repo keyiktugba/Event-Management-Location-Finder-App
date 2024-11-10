@@ -1,0 +1,16 @@
+﻿@model Yazlab_2.Models.EntityBase.Etkinlik
+
+<h2>Etkinlik Düzenle</h2>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="ID" />
+    <label>Etkinlik Adı:</label>
+    <input asp-for="EtkinlikAdi" />
+    <label>Tarih:</label>
+    <input asp-for="Tarih" type="date" />
+    <label>Saat:</label>
+    <input asp-for="Saat" type="time" />
+    <label>Konum:</label>
+    <input asp-for="Konum" />
+    <button type="submit">Güncelle</button>
+</form>

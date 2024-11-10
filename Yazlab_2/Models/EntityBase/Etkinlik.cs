@@ -33,7 +33,8 @@
 
         [ForeignKey("UserID")]
         public User User { get; set; }
-
+        // Yeni IsApproved alanı
+        public bool IsApproved { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 

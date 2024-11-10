@@ -32,7 +32,7 @@ namespace Yazlab_2.Models.ViewModel
         public string PhoneNumber { get; set; }
 
         public string Konum { get; set; }
-        public string ProfilePicture { get; set; }
+        public IFormFile ProfilePicture { get; set; }
         public IEnumerable<int> SelectedCategories { get; set; }
     }
 
