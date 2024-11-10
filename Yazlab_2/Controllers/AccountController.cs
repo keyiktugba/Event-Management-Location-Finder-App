@@ -25,7 +25,6 @@ namespace Yazlab_2.Controllers
             _emailService = emailService;
         }
 
-//jfhkljdgfşldfkglşdşlf
         [HttpPost]
         public async Task<IActionResult> Login(UserLoginViewModel model)
         {
