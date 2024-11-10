@@ -140,63 +140,7 @@ namespace Yazlab_2.Controllers
         }
 
 
-        // Register POST
-        /*   [HttpPost]
-           [ValidateAntiForgeryToken]
-           public async Task<IActionResult> Register(UserRegisterViewModel model)
-           {
-               if (ModelState.IsValid)
-               {
-                   var user = new User
-                   {
-                       UserName = model.Username,
-                       FirstName = model.FirstName,
-                       LastName = model.LastName,
-                       Email = model.Email,
-                       BirthDate = model.BirthDate,
-                       Gender = model.Gender,
-                       PhoneNumber = model.PhoneNumber,
-                       ProfilePicture = model.ProfilePicture,
-                       Konum=model.Konum
-                   };
-
-                   var result = await _userManager.CreateAsync(user, model.Password);
-                   var selectedCategories = model.SelectedCategories;
-                   if (result.Succeeded)
-                   {
-                       // İlgi alanlarını ekleyelim
-                       if (model.SelectedCategories != null)
-                       {
-                           foreach (var categoryId in model.SelectedCategories)
-                           {
-                               var interest = new Interest
-                               {
-                                   ID = user.Id,
-                                   CategoryID = categoryId
-                               };
-                               _context.Ilgiler.Add(interest);
-                           }
-                           await _context.SaveChangesAsync();
-                       }
-
-                       await _userManager.AddToRoleAsync(user, "User");
-                       // Kullanıcıyı otomatik olarak giriş yaptırmak
-                       await _signInManager.SignInAsync(user, isPersistent: false);
-                       return RedirectToAction("Index", "Home");
-
-                   }
-
-                   foreach (var error in result.Errors)
-                   {
-                       ModelState.AddModelError(string.Empty, error.Description);
-                   }
-               }
-
-               // Eğer model geçerli değilse, kategorilerle birlikte formu yeniden göster
-               var categories = _context.Kategoriler.ToList();
-               ViewBag.Categories = categories;
-               return View(model);
-           }*/
+       
 
         [HttpGet]
         public async Task<IActionResult> adminRegister()
