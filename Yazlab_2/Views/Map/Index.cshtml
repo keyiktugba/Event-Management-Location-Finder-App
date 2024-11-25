@@ -14,6 +14,8 @@
 
 <script>
     var konumlar = @Html.Raw(Json.Serialize(ViewData["Konumlar"])); // Konumları alın
+    var etkinlikAdlari = @Html.Raw(Json.Serialize(ViewData["EtkinlikAdlari"])); // Etkinlik adlarını alın
+    var katilimDurumu = @Html.Raw(Json.Serialize(ViewData["KatilimDurumu"])); // Katılım durumlarını alın
 
     var map = L.map('map').setView([0, 0], 2);
     var selectedCoordinates = null;
@@ -44,19 +46,40 @@
         shadowSize: [41, 41]
     });
 
+    var greenIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+
     // Kullanıcı ve etkinlik konumları
     konumlar.forEach((konum, index) => {
         var coordinates = konum.split(',');
         var marker;
+        var iconToUse = greenIcon; // Varsayılan olarak greenIcon
 
         if (index === 0) {
+            // Kullanıcının kendi konumunu yerleştir
             userCoordinates = [parseFloat(coordinates[0]), parseFloat(coordinates[1])];
             marker = L.marker(userCoordinates, { icon: blueIcon }).addTo(map)
-                .bindPopup("Kullanıcının Kendi Konumu")
+                .bindPopup("Buradasınız")
                 .openPopup();
         } else {
-            marker = L.marker([parseFloat(coordinates[0]), parseFloat(coordinates[1])], { icon: redIcon }).addTo(map)
-                .bindPopup("Kullanıcının Katıldığı Etkinlik Konumu")
+            // Etkinlik konumlarını yerleştir
+            var etkinlikAdi = etkinlikAdlari[index - 1]; // Etkinlik adı, konumlardan bir eksik olacak çünkü kullanıcı konumu ilk sırada
+
+            // Katılım durumuna göre icon belirle
+            if (katilimDurumu[index - 1]) {
+                iconToUse = greenIcon; // Katıldıkları etkinlikler için greenIcon
+            } else {
+                iconToUse = redIcon; // Katılmadıkları etkinlikler için redIcon
+            }
+
+            marker = L.marker([parseFloat(coordinates[0]), parseFloat(coordinates[1])], { icon: iconToUse }).addTo(map)
+                .bindPopup(" " + etkinlikAdi) // Etkinlik adını göster
                 .on('click', function () {
                     selectedCoordinates = [parseFloat(coordinates[0]), parseFloat(coordinates[1])];
                     this.openPopup();
@@ -68,6 +91,7 @@
         var firstCoordinates = konumlar[0].split(',');
         map.setView([parseFloat(firstCoordinates[0]), parseFloat(firstCoordinates[1])], 13);
     }
+
 
     // Routing Machine
     var routeControl = L.Routing.control({
@@ -81,25 +105,31 @@
         if (userCoordinates && selectedCoordinates) {
             var mode = document.getElementById('routeMode').value;
             var transportMode;
+            console.log("Selected mode:", mode); // Debugging
 
             // Seçilen moda göre rota tipi belirleme
             if (mode === 'car') {
-                transportMode = 'car';
+                transportMode = 'driving'; // OSRM'deki araba modu "driving"
             } else if (mode === 'bike') {
-                transportMode = 'bike';
+                transportMode = 'cycling'; // OSRM'deki bisiklet modu "cycling"
             } else if (mode === 'foot') {
-                transportMode = 'foot';
+                transportMode = 'walking'; // OSRM'deki yürüyüş modu "walking"
             } else {
-                transportMode = 'car'; // Varsayılan olarak araba
+                transportMode = 'driving'; // Varsayılan olarak araba
             }
+            console.log("Transport mode:", transportMode); // Debugging
 
-            // Debugging - Seçilen modun doğru alındığını kontrol et
-            console.log(`Selected mode: ${mode}`);
-            console.log(`Constructed service URL: https://router.project-osrm.org/route/v1/${transportMode}/`);
+            // CORS Proxy kullanarak URL oluşturuluyor
+            var proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+            var apiKey = 'YOUR_API_KEY'; // Kendi OpenRouteService API anahtarınızı buraya ekleyin
+            var apiUrl = `https://api.openrouteservice.org/v2/directions/${transportMode}?api_key=${apiKey}&start=${userCoordinates[1]},${userCoordinates[0]}&end=${selectedCoordinates[1]},${selectedCoordinates[0]}`;
+            var serviceUrl = proxyUrl + apiUrl;
+
+            console.log(`Constructed service URL: ${serviceUrl}`);
 
             // Rota için mod seçimi
             routeControl.options.router = L.Routing.osrmv1({
-                serviceUrl: `https://router.project-osrm.org/route/v1/${transportMode}/`
+                serviceUrl: serviceUrl
             });
 
             // Rota çizme
@@ -108,8 +138,8 @@
                 L.latLng(selectedCoordinates[0], selectedCoordinates[1])
             ]);
 
-            // Yola ilişkin hataları kontrol et
             routeControl.on('routesfound', function (e) {
+                console.log("API Response:", e.routes); // Yanıtı konsola yazdır
                 if (e.routes.length === 0) {
                     alert("Rota bulunamadı, lütfen tekrar deneyin.");
                 } else {
@@ -125,4 +155,5 @@
             alert("Lütfen bir etkinlik seçin!");
         }
     });
+
 </script>
