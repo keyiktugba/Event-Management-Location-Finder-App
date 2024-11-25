@@ -5,6 +5,7 @@ namespace Yazlab_2.Models.ViewModel
 {
     public class EtkinlikRegisterViewModel
     {
+        public int EtkinlikID { get; set; }
         [Required]
         public string EtkinlikAdi { get; set; }
 

@@ -89,6 +89,7 @@ namespace Yazlab_2.Data
         public DbSet<Puan> Puanlar { get; set; }
         public DbSet<Kategori> Kategoriler { get; set; }
         public DbSet<Interest> Ilgiler { get; set; }
+        public DbSet<Notification> Notifications { get; set; } // Notification DbSet
 
         // Fluent API ile ilişkiler ve yapılandırmalar
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -129,10 +130,10 @@ new Kategori { CategoryID = 9, CategoryName = "Doğa Yürüyüşü" }
                 .OnDelete(DeleteBehavior.Restrict); // Gönderici silindiğinde mesaj silinmez
 
             modelBuilder.Entity<Mesaj>()
-                .HasOne(m => m.Etkinlik)
-                .WithMany()
-                .HasForeignKey(m => m.EtkinlikID)
-                .OnDelete(DeleteBehavior.Restrict); // Etkinlik silindiğinde mesaj silinmez
+             .HasOne(m => m.Etkinlik)
+             .WithMany()
+             .HasForeignKey(m => m.EtkinlikID)
+             .OnDelete(DeleteBehavior.Cascade);
 
             // Puan tablosu için birleşik anahtar ve ilişkiler
             modelBuilder.Entity<Puan>()

@@ -1,0 +1,73 @@
+﻿<h2>Öneriler</h2>
+
+<h3>İlgi Alanlarınıza Göre Etkinlikler</h3>
+<div class="row">
+    @foreach (var etkinlik in Model.InterestBased)
+    {
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">@etkinlik.EtkinlikAdi</h5>
+                    <p class="card-text">@etkinlik.Aciklama</p>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            @etkinlik.Tarih.ToString("dd MMM yyyy") - @etkinlik.Saat.ToString(@"hh\:mm")
+                        </small>
+                    </p>
+                    <form asp-action="JoinEvent" asp-controller="User" method="post">
+                        <input type="hidden" name="eventId" value="@etkinlik.ID" />
+                        <button type="submit" class="btn btn-success btn-sm">Katıl</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<h3>Geçmiş Etkinliklerinize Göre Etkinlikler</h3>
+<div class="row">
+    @foreach (var etkinlik in Model.PastEventBased)
+    {
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">@etkinlik.EtkinlikAdi</h5>
+                    <p class="card-text">@etkinlik.Aciklama</p>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            @etkinlik.Tarih.ToString("dd MMM yyyy") - @etkinlik.Saat.ToString(@"hh\:mm")
+                        </small>
+                    </p>
+                    <form asp-action="JoinEvent" asp-controller="User" method="post">
+                        <input type="hidden" name="eventId" value="@etkinlik.ID" />
+                        <button type="submit" class="btn btn-success btn-sm">Katıl</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<h3>Konumunuza Göre Etkinlikler</h3>
+<div class="row">
+    @foreach (var etkinlik in Model.LocationBased)
+    {
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">@etkinlik.EtkinlikAdi</h5>
+                    <p class="card-text">@etkinlik.Aciklama</p>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            @etkinlik.Tarih.ToString("dd MMM yyyy") - @etkinlik.Saat.ToString(@"hh\:mm")
+                        </small>
+                    </p>
+                    <form asp-action="JoinEvent" asp-controller="User" method="post">
+                        <input type="hidden" name="eventId" value="@etkinlik.ID" />
+                        <button type="submit" class="btn btn-success btn-sm">Katıl</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>

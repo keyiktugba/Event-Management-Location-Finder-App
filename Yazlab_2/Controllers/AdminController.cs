@@ -27,24 +27,44 @@ namespace Yazlab_2.Controllers
         }
 
         // Kullanıcı Silme
-        [HttpPost]
         public IActionResult DeleteUser(string userId)
         {
-            var user = _context.Users.FirstOrDefault(u => u.Id == userId);
-            if (user != null)
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                _context.Users.Remove(user);
-                _context.SaveChanges();
-                TempData["SuccessMessage"] = "Kullanıcı başarıyla silindi!";
+                try
+                {
+                    // Kullanıcıyı bul
+                    var user = _context.Users.Find(userId);
+                    if (user == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // Kullanıcının katıldığı etkinliklerden kendisini sil
+                    // Önce Katilimcilar tablosundaki ilgili kayıtları sil
+                    var katilimcilar = _context.Katilimcilar.Where(k => k.KullaniciID== userId).ToList();
+                    _context.Katilimcilar.RemoveRange(katilimcilar);
+
+
+                    // Kullanıcıyı sil
+                    _context.Users.Remove(user);
+
+                    // Değişiklikleri kaydet
+                    _context.SaveChanges();
+
+                    // Transaction'ı onayla
+                    transaction.Commit();
+                }
+                catch (Exception)
+                {
+                    // Hata durumunda transaction'ı geri al
+                    transaction.Rollback();
+                    return StatusCode(500, "Bir hata oluştu.");
+                }
             }
-            else
-            {
-                TempData["ErrorMessage"] = "Kullanıcı bulunamadı!";
-            }
+
             return RedirectToAction("Dashboard");
         }
-
-   
 
 
         public IActionResult PendingEvents()
@@ -89,18 +109,52 @@ namespace Yazlab_2.Controllers
         [HttpPost]
         public IActionResult DeleteEvent(int id)
         {
-            var etkinlik = _context.Etkinlikler.FirstOrDefault(e => e.ID == id);
-            if (etkinlik != null)
+            var etkinlik = _context.Etkinlikler.Find(id);
+            if (etkinlik == null)
             {
-                _context.Etkinlikler.Remove(etkinlik);
-                _context.SaveChanges();
-                TempData["SuccessMessage"] = "Etkinlik başarıyla silindi!";
+                return NotFound();
+            }
+            var mesajlar = _context.Mesajlar.Where(m => m.EtkinlikID == id).ToList();
+
+            // Mesajları sil
+            if (mesajlar.Any())
+            {
+                _context.Mesajlar.RemoveRange(mesajlar);
+            }
+
+            // Önce Katilimcilar tablosundaki ilgili kayıtları sil
+            var katilimcilar = _context.Katilimcilar.Where(k => k.EtkinlikID == id).ToList();
+            _context.Katilimcilar.RemoveRange(katilimcilar);
+
+            // Sonra etkinliği sil
+            _context.Etkinlikler.Remove(etkinlik);
+            _context.SaveChanges();
+
+            return RedirectToAction("Events");
+        }
+     
+        [HttpGet]
+        public IActionResult AddCategory()
+        {
+            return View(); // Formu döndürür
+        }
+
+        // Kategori Ekleme (POST)
+        [HttpPost]
+        public IActionResult AddCategory(Kategori kategori)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Kategoriler.Add(kategori); // Kategoriyi ekler
+                _context.SaveChanges(); // Veritabanına kaydeder
+                TempData["SuccessMessage"] = "Kategori başarıyla eklendi!";
+                return RedirectToAction("AddCategory"); // Aynı sayfaya yönlendirir
             }
             else
             {
-                TempData["ErrorMessage"] = "Etkinlik bulunamadı!";
+                TempData["ErrorMessage"] = "Kategori eklenirken bir hata oluştu!";
+                return View(kategori); // Formu tekrar gösterir
             }
-            return RedirectToAction("Events");
         }
 
 

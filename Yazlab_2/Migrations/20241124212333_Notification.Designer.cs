@@ -12,8 +12,8 @@ using Yazlab_2.Data;
 namespace Yazlab_2.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241109145544_AddIsApprovedToEtkinlik")]
-    partial class AddIsApprovedToEtkinlik
+    [Migration("20241124212333_Notification")]
+    partial class Notification
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -342,6 +342,35 @@ namespace Yazlab_2.Migrations
                     b.ToTable("Mesajlar");
                 });
 
+            modelBuilder.Entity("Yazlab_2.Models.EntityBase.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("Yazlab_2.Models.EntityBase.Puan", b =>
                 {
                     b.Property<string>("KullaniciID")
@@ -562,7 +591,7 @@ namespace Yazlab_2.Migrations
                     b.HasOne("Yazlab_2.Models.EntityBase.Etkinlik", "Etkinlik")
                         .WithMany()
                         .HasForeignKey("EtkinlikID")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Yazlab_2.Models.EntityBase.User", "Gonderici")
@@ -574,6 +603,17 @@ namespace Yazlab_2.Migrations
                     b.Navigation("Etkinlik");
 
                     b.Navigation("Gonderici");
+                });
+
+            modelBuilder.Entity("Yazlab_2.Models.EntityBase.Notification", b =>
+                {
+                    b.HasOne("Yazlab_2.Models.EntityBase.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Yazlab_2.Models.EntityBase.Puan", b =>

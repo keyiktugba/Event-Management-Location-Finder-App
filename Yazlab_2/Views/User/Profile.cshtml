@@ -45,8 +45,23 @@
         <label asp-for="User.Konum"></label>
         <input asp-for="User.Konum" class="form-control" />
     </div>
+    <h3>İlgi Alanlarınız</h3>
+    @if (Model.Interests != null && Model.Interests.Any())
+    {
+        <ul>
+            @foreach (var interest in Model.Interests)
+            {
+                <li>@interest.Category.CategoryName</li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p>Henüz ilgi alanı eklemediniz.</p>
+    }
 
- 
+
+
 </form>
 
 <h3>Tüm Etkinlikler</h3>
@@ -86,10 +101,19 @@
 <div class="mb-3">
     <a asp-action="Myevents" asp-controller="User" class="btn btn-info">Kendi Etkinliklerim</a>
 </div>
+
 <div class="mb-3">
- <a asp-controller="Map" asp-action="Index" class="btn btn-primary">
-            <i class="bi bi-map"></i> Harita </a>
+    <a asp-action="JoinedEvents" asp-controller="User" class="btn btn-info">Katıldığım Etkinliklerim</a>
 </div>
+<div class="mb-3">
+    <a asp-controller="Map" asp-action="Index" class="btn btn-primary">
+        <i class="bi bi-map"></i> Harita
+    </a>
+</div>
+<div class="mb-3">
+    <a asp-action="Oneriler" asp-controller="User" class="btn btn-secondary">Öneriler</a>
+</div>
+
 
 <div class="mb-3">
     <a asp-action="JoinedEvents" asp-controller="User" class="btn btn-info">Mesajlaşma</a>

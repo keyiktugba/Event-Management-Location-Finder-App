@@ -1,16 +1,62 @@
-﻿@model Yazlab_2.Models.EntityBase.Etkinlik
+﻿@model Yazlab_2.Models.ViewModel.EtkinlikRegisterViewModel
 
 <h2>Etkinlik Düzenle</h2>
 
-<form asp-action="Edit" method="post">
-    <input type="hidden" asp-for="ID" />
-    <label>Etkinlik Adı:</label>
-    <input asp-for="EtkinlikAdi" />
-    <label>Tarih:</label>
-    <input asp-for="Tarih" type="date" />
-    <label>Saat:</label>
-    <input asp-for="Saat" type="time" />
-    <label>Konum:</label>
-    <input asp-for="Konum" />
-    <button type="submit">Güncelle</button>
+<form asp-action="Edit" asp-controller="Etkinlik" method="post">
+    <div class="form-group">
+        <label asp-for="EtkinlikAdi" class="control-label"></label>
+        <input asp-for="EtkinlikAdi" class="form-control" />
+        <span asp-validation-for="EtkinlikAdi" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Aciklama" class="control-label"></label>
+        <textarea asp-for="Aciklama" class="form-control"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Tarih" class="control-label"></label>
+        <input asp-for="Tarih" class="form-control" />
+        <span asp-validation-for="Tarih" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Saat" class="control-label"></label>
+        <input asp-for="Saat" class="form-control" />
+        <span asp-validation-for="Saat" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="EtkinlikSuresi" class="control-label"></label>
+        <input asp-for="EtkinlikSuresi" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Konum" class="control-label"></label>
+        <input asp-for="Konum" class="form-control" />
+        <span asp-validation-for="Konum" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label for="CategoryID">Kategori</label>
+        <select asp-for="CategoryID" class="form-control" asp-items="@(ViewData["CategoryList"] as SelectList)">
+            <option value="">Kategori Seçin</option>
+        </select>
+    </div>
+
+    <!-- Gizli UserID alanı -->
+    <input type="hidden" asp-for="UserID" />
+    <input type="hidden" asp-for="EtkinlikID" />
+    <button type="submit" class="btn btn-primary">Etkinlik Güncelle</button>
 </form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}

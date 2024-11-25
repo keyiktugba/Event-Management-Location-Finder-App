@@ -11,7 +11,7 @@ namespace Yazlab_2.Models.Service
             var smtpClient = new SmtpClient("smtp.gmail.com")
             {
                 Port = 587, // TLS için doğru port
-                Credentials = new NetworkCredential("your-email@gmail.com", "your-email-password"), // Gmail hesabınızın bilgileri
+                Credentials = new NetworkCredential("tugbik6@gmail.com", "kvni zwot sgfx gouj"), // Gmail hesabınızın bilgileri
                 EnableSsl = true // SSL/TLS bağlantısı aktif
             };
 

@@ -1,62 +1,60 @@
-﻿@model Yazlab_2.Models.EntityBase.User
+﻿@model Yazlab_2.Models.ViewModel.ProfileViewModel
 
-<h2>Kullanıcı Düzenle</h2>
-
-<form method="post" enctype="multipart/form-data">
-    <input type="hidden" name="Id" value="@Model.Id" />
-
-    <div class="form-group">
-        <label for="UserName">Kullanıcı Adı</label>
-        <input type="text" class="form-control" id="UserName" name="UserName" value="@Model.UserName" required />
+<form asp-action="EditUser" method="post" enctype="multipart/form-data">
+    <h3>Kullanıcı Bilgileri</h3>
+    <!-- Kullanıcı Adı -->
+    <div>
+        <label for="Username">Kullanıcı Adı</label>
+        <input type="text" id="Username" name="User.UserName" value="@Model.User.UserName" />
     </div>
-    <div class="form-group">
-        <label for="Email">Email</label>
-        <input type="email" class="form-control" id="Email" name="Email" value="@Model.Email" required />
-    </div>
-    <div class="form-group">
-        <label for="PhoneNumber">Telefon Numarası</label>
-        <input type="text" class="form-control" id="PhoneNumber" name="PhoneNumber" value="@Model.PhoneNumber" required />
-    </div>
-    <div class="form-group">
+    <div>
         <label for="FirstName">Ad</label>
-        <input type="text" class="form-control" id="FirstName" name="FirstName" value="@Model.FirstName" />
+        <input type="text" id="FirstName" name="User.FirstName" value="@Model.User.FirstName" />
     </div>
-    <div class="form-group">
+    <div>
         <label for="LastName">Soyad</label>
-        <input type="text" class="form-control" id="LastName" name="LastName" value="@Model.LastName" />
+        <input type="text" id="LastName" name="User.LastName" value="@Model.User.LastName" />
     </div>
-    <div class="form-group">
+    <div>
+        <label for="Email">E-posta</label>
+        <input type="email" id="Email" name="User.Email" value="@Model.User.Email" />
+    </div>
+    <div>
+        <label for="PhoneNumber">Telefon</label>
+        <input type="text" id="PhoneNumber" name="User.PhoneNumber" value="@Model.User.PhoneNumber" />
+    </div>
+    <div>
         <label for="BirthDate">Doğum Tarihi</label>
-        <input type="date" class="form-control" id="BirthDate" name="BirthDate" value="@Model.BirthDate.ToString("yyyy-MM-dd")" />
-    </div>
-    <div class="form-group">
-        <label for="Gender">Cinsiyet</label>
-        <input type="text" class="form-control" id="Gender" name="Gender" value="@Model.Gender" />
-    </div>
-    <div class="form-group">
-        <label for="Konum">Konum</label>
-        <input type="text" class="form-control" id="Konum" name="Konum" value="@Model.Konum" />
-    </div>
-    <div class="form-group">
-        <label>Mevcut Profil Fotoğrafı</label><br />
-        @if (!string.IsNullOrEmpty(Model.ProfilePicture))
-        {
-            <img src="@Url.Content(Model.ProfilePicture)" alt="Profil Fotoğrafı" class="img-thumbnail" style="width:150px; height:150px;" />
-            <p>Dosya Yolu: @Model.ProfilePicture</p>
-        }
-        else
-        {
-            <img src="/images/default-profile.png" alt="Varsayılan Fotoğraf" class="img-thumbnail" style="width:150px; height:150px;" />
-            <p>Varsayılan fotoğraf gösteriliyor</p>
-        }
+        <input type="date" id="BirthDate" name="User.BirthDate" value="@Model.User.BirthDate.ToString("yyyy-MM-dd")" />
     </div>
 
-    <div class="form-group">
-        <label for="ProfilePicture">Yeni Profil Fotoğrafı</label>
-        <input type="file" class="form-control" id="ProfilePicture" name="ProfilePicture" />
+    <!-- Profil Fotoğrafı -->
+    <div>
+        <label for="ProfilePicture">Profil Fotoğrafı</label>
+        @if (!string.IsNullOrEmpty(Model.User.ProfilePicture)) // Eğer profil fotoğrafı varsa
+        {
+            <img src="@Model.User.ProfilePicture" alt="Profil Fotoğrafı" style="width: 100px; height: 100px;" />
+        }
+        <input type="file" id="ProfilePicture" name="ProfilePicture" />
     </div>
 
-    <button type="submit" class="btn btn-success">Kaydet</button>
+    <!-- İlgi Alanları Seçimi -->
+    <h3>İlgi Alanlarınız</h3>
+    <div class="form-group">
+        <label>İlgi Alanlarını Seçin</label>
+        <div>
+            @foreach (var category in Model.Categories)
+            {
+                <div>
+                    <input type="checkbox"
+                           name="SelectedInterests"
+                           value="@category.CategoryID"
+                    @(Model.SelectedInterests.Contains(category.CategoryID) ? "checked" : "") />
+                    <label>@category.CategoryName</label>
+                </div>
+            }
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Güncelle</button>
 </form>
-
-<a href="@Url.Action("Profile", "User")" class="btn btn-secondary">Geri</a>

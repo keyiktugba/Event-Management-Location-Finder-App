@@ -33,40 +33,76 @@ namespace Yazlab_2.Controllers
         }
 
 
-
-        // 3. Etkinlik Güncelleme (GET)
+        [HttpGet]
         public IActionResult Edit(int id)
         {
-            var etkinlik = _context.Etkinlikler.Find(id);
+            var etkinlik = _context.Etkinlikler
+                .Where(e => e.ID == id)
+                .FirstOrDefault();
+
             if (etkinlik == null)
             {
                 return NotFound();
             }
 
-            ViewBag.Categories = _context.Kategoriler.ToList();
-            ViewBag.Users = _context.Users.ToList();
-            return View(etkinlik);
+            // Etkinlik modelini ViewModel'e dönüştür
+            var model = new EtkinlikRegisterViewModel
+            {   EtkinlikID= etkinlik.ID,
+                EtkinlikAdi = etkinlik.EtkinlikAdi,
+                Aciklama = etkinlik.Aciklama,
+                Tarih = etkinlik.Tarih,
+                Saat = etkinlik.Saat,
+                EtkinlikSuresi = etkinlik.EtkinlikSuresi,
+                Konum = etkinlik.Konum,
+                CategoryID = etkinlik.CategoryID,
+                UserID = etkinlik.UserID
+            };
+
+            // ViewData'yı güncelle
+            ViewData["CategoryList"] = new SelectList(_context.Kategoriler, "CategoryID", "CategoryName", model.CategoryID);
+
+            return View(model);
         }
 
-        // 3. Etkinlik Güncelleme (POST)
         [HttpPost]
-        public async Task<IActionResult> Edit(int id, Etkinlik etkinlik)
+        [ValidateAntiForgeryToken]
+        public IActionResult Edit(EtkinlikRegisterViewModel model)
         {
-            if (id != etkinlik.ID)
-            {
-                return BadRequest();
-            }
-
             if (ModelState.IsValid)
             {
-                _context.Etkinlikler.Update(etkinlik);
-                await _context.SaveChangesAsync();
-                return RedirectToAction("Index");
+                var etkinlik = _context.Etkinlikler
+                    .Where(e => e.ID == model.EtkinlikID)  // ID'yi burada doğru alacağız, kategori değil
+                    .FirstOrDefault();
+
+                if (etkinlik == null)
+                {
+                    return NotFound();
+                }
+
+                // Etkinlik modelini güncelle
+                etkinlik.EtkinlikAdi = model.EtkinlikAdi;
+                etkinlik.Aciklama = model.Aciklama;
+                etkinlik.Tarih = model.Tarih;
+                etkinlik.Saat = model.Saat;
+                etkinlik.EtkinlikSuresi = model.EtkinlikSuresi;
+                etkinlik.Konum = model.Konum;
+                etkinlik.CategoryID = model.CategoryID;
+
+                _context.SaveChanges();
+
+                TempData["SuccessMessage"] = "Etkinliğiniz başarıyla güncellenmiştir.";
+                return RedirectToAction("Profile", "User");
             }
 
-            ViewBag.Categories = _context.Kategoriler.ToList();
-            ViewBag.Users = _context.Users.ToList();
-            return View(etkinlik);
+            // Model geçerli değilse kategorileri tekrar yükle
+            ViewData["CategoryList"] = _context.Kategoriler
+                .Select(k => new SelectListItem
+                {
+                    Value = k.CategoryID.ToString(),
+                    Text = k.CategoryName
+                }).ToList();
+
+            return View(model);
         }
 
         // 4. Etkinlik Silme

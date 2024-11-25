@@ -75,7 +75,6 @@ namespace Yazlab_2.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Yeni kullanıcı oluşturuluyor
                 var user = new User
                 {
                     UserName = model.Username,
@@ -88,60 +87,59 @@ namespace Yazlab_2.Controllers
                     Konum = model.Konum
                 };
 
-                // Profil fotoğrafı yüklenmişse, dosyayı kaydediyoruz
+                // Profil fotoğrafını kaydetme işlemi
                 if (model.ProfilePicture != null && model.ProfilePicture.Length > 0)
                 {
-                    // Dosya adı için benzersiz bir GUID oluşturuluyor
                     var fileName = Guid.NewGuid().ToString() + Path.GetExtension(model.ProfilePicture.FileName);
-
-                    // Yüklemek için hedef dizini belirliyoruz
                     var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-
-                    // Eğer klasör yoksa oluşturuyoruz
                     if (!Directory.Exists(uploadsFolder))
                     {
                         Directory.CreateDirectory(uploadsFolder);
                     }
-
-                    // Dosyanın tam yolunu belirliyoruz
                     var filePath = Path.Combine(uploadsFolder, fileName);
-
-                    // Dosyayı hedef dizine kaydediyoruz
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
                         await model.ProfilePicture.CopyToAsync(stream);
                     }
-
-                    // Dosya yolunu veritabanına kaydedilmek üzere modelde saklıyoruz
                     user.ProfilePicture = "/uploads/" + fileName;
                 }
 
-                // Kullanıcıyı veritabanına kaydediyoruz
+                // Kullanıcıyı oluşturuyoruz
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
-                    // İlgi alanları, roller ve kullanıcı girişi işlemleri
+                    // Kullanıcıya rol atıyoruz
                     await _userManager.AddToRoleAsync(user, "User");
+
+                    // İlgi alanlarını kaydetme işlemi
+                    if (model.SelectedCategories != null && model.SelectedCategories.Any())
+                    {
+                        var interests = model.SelectedCategories.Select(categoryId => new Interest
+                        {
+                            ID = user.Id,
+                            CategoryID = categoryId
+                        }).ToList();
+
+                        _context.Ilgiler.AddRange(interests);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    // Kullanıcıyı otomatik olarak giriş yaptırıyoruz
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     return RedirectToAction("Index", "Home");
                 }
 
-                // Hata varsa, ModelState'e ekliyoruz
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
             }
 
-            // Kategorileri alıp view'a gönderiyoruz
-            var categories = _context.Kategoriler.ToList();
-            ViewBag.Categories = categories;
-
+            // Hata durumunda kategorileri tekrar view'a gönderiyoruz
+            ViewBag.Categories = _context.Kategoriler.ToList();
             return View(model);
         }
 
-
-       
 
         [HttpGet]
         public async Task<IActionResult> adminRegister()
@@ -193,16 +191,24 @@ namespace Yazlab_2.Controllers
             return View(new ForgotPasswordViewModel());
         }
 
-    
         [HttpPost]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
             if (ModelState.IsValid)
             {
-                // Reset link oluşturulması
-                string resetLink = "https://yourapp.com/resetpassword?token=12345"; // Burada linki dinamik yapmalısınız.
+                // Veritabanında e-posta adresinin kayıtlı olup olmadığını kontrol et
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user == null)
+                {
+                    ModelState.AddModelError(string.Empty, "E-posta adresi bulunamadı.");
+                    return View(model);
+                }
 
-                // Şifre sıfırlama e-posta gönderme
+                // Reset link oluşturulması
+                string token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                string resetLink = Url.Action("ResetPassword", "Account", new { token, email = model.Email }, Request.Scheme);
+
+                // Şifre sıfırlama e-postası gönderme
                 await _emailService.SendResetPasswordEmail(model.Email, resetLink);
 
                 return RedirectToAction("ForgotPasswordConfirmation");
@@ -210,6 +216,7 @@ namespace Yazlab_2.Controllers
 
             return View(model);
         }
+
         [HttpGet]
         public IActionResult ForgotPasswordConfirmation()
         {
