@@ -1,0 +1,88 @@
+﻿@model List<Yazlab_2.Models.EntityBase.Notification>
+
+<h2>Bildirimler</h2>
+
+<div class="notification-list">
+    @foreach (var notification in Model)
+    {
+        <div class="notification-item @(!notification.IsRead ? "unread" : "")">
+            <div class="notification-header">
+                <strong>Bildirim:</strong> @notification.Message
+            </div>
+            <div class="notification-footer">
+                <span class="notification-date">
+                    <strong>Tarih:</strong> @notification.DateCreated.ToString("dd.MM.yyyy HH:mm")
+                </span>
+                @if (!notification.IsRead)
+                {
+                    <form asp-action="MarkAsRead" method="post" class="mark-as-read-form">
+                        <input type="hidden" name="notificationId" value="@notification.Id" />
+                        <button type="submit" class="btn btn-link mark-as-read-btn">Okundu olarak işaretle</button>
+                    </form>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<!-- CSS -->
+<style>
+    .notification-list {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    .notification-item {
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .notification-item.unread {
+            background-color: #eaf7e7;
+            border-left: 5px solid #28a745;
+        }
+
+    .notification-header {
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .notification-footer {
+        font-size: 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .notification-date {
+        color: #777;
+    }
+
+    .mark-as-read-form {
+        display: inline;
+    }
+
+    .mark-as-read-btn {
+        color: #007bff;
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: 14px;
+        cursor: pointer;
+        text-decoration: underline;
+    }
+
+        .mark-as-read-btn:hover {
+            color: #0056b3;
+        }
+
+    .notification-item:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+</style>

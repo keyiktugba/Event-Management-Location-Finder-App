@@ -1,0 +1,177 @@
+﻿@using Yazlab_2.Models.ViewModel
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<div class="container mt-5">
+    <h1 class="text-center mb-4 text-su-yesili">Uygulama Raporu</h1>
+
+    <div class="row mb-4">
+        <!-- Genel İstatistikler -->
+        <div class="col-md-4">
+            <div class="card shadow-sm card-su-yesili">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Toplam Kullanıcı</h5>
+                    <p class="display-6 text-su-yesili">@Model.TotalUsers</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm card-su-yesili">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Toplam Etkinlik</h5>
+                    <p class="display-6 text-su-yesili">@Model.TotalEvents</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm card-su-yesili">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Bu Haftaki Etkinlikler</h5>
+                    <p class="display-6 text-su-yesili">@Model.WeeklyEvents</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Yaş Dağılımı -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm card-su-yesili">
+                <div class="card-body">
+                    <h5 class="card-title text-center">Yaş Dağılımı</h5>
+                    <canvas id="ageDistributionChart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Haftalık Etkinlikler -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm card-su-yesili">
+                <div class="card-body">
+                    <h5 class="card-title text-center">Haftalık Etkinlikler</h5>
+                    <canvas id="weeklyEventsChart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Kullanıcı Cinsiyet Dağılımı -->
+        <div class="col-md-6 offset-md-3">
+            <div class="card shadow-sm card-su-yesili">
+                <div class="card-body">
+                    <h5 class="card-title text-center">Kullanıcı Cinsiyet Dağılımı</h5>
+                    <canvas id="genderChart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. Yaş Dağılımı Grafiği
+    const ageDistributionCtx = document.getElementById('ageDistributionChart').getContext('2d');
+    new Chart(ageDistributionCtx, {
+        type: 'bar',
+        data: {
+            labels: @Html.Raw(Json.Serialize(Model.AgeDistribution.Keys)),
+            datasets: [{
+                label: 'Kullanıcı Sayısı',
+                data: @Html.Raw(Json.Serialize(Model.AgeDistribution.Values)),
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // 2. Haftalık Etkinlik Grafiği
+    const weeklyEventsCtx = document.getElementById('weeklyEventsChart').getContext('2d');
+    new Chart(weeklyEventsCtx, {
+        type: 'line',
+        data: {
+            labels: @Html.Raw(Json.Serialize(Model.WeeklyEventDates)),
+            datasets: [{
+                label: 'Günlük Etkinlik Sayısı',
+                data: @Html.Raw(Json.Serialize(Model.WeeklyEventCounts)),
+                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                fill: true
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // 3. Cinsiyet Dağılımı Grafiği
+    const genderCtx = document.getElementById('genderChart').getContext('2d');
+    new Chart(genderCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Kadın', 'Erkek'],
+            datasets: [{
+                label: 'Cinsiyet Dağılımı',
+                data: [@Model.FemaleUsers, @Model.MaleUsers],
+                backgroundColor: ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)'],
+                borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            maintainAspectRatio: false
+        }
+    });
+</script>
+
+<style>
+    /* Genel tema */
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #f4f9f9;
+        color: #333;
+    }
+
+    .text-su-yesili {
+        color: #1a6b5c; /* Su yeşili rengi */
+    }
+
+    /* Kartlar */
+    .card-su-yesili {
+        background-color: #e8f8f2; /* Su yeşili açık arka plan */
+        border: 1px solid #1a6b5c;
+        border-radius: 10px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Başlıklar */
+    h5.card-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .display-6 {
+        font-size: 2rem;
+        font-weight: 600;
+    }
+
+    /* Grafikler */
+    canvas {
+        max-height: 300px;
+    }
+</style>

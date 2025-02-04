@@ -4,91 +4,214 @@
     ViewData["Title"] = "Register";
 }
 
-<form asp-action="Register" method="post" enctype="multipart/form-data">
-    <!-- Username Field -->
-    <div class="form-group">
-        <label asp-for="Username"></label>
-        <input asp-for="Username" class="form-control" />
-        <span asp-validation-for="Username" class="text-danger"></span>
-    </div>
+<div style="border: 2px solid #00695c; padding: 20px; border-radius: 10px; background-color: #e0f2f1; margin-bottom: 40px;">
 
-    <!-- FirstName Field -->
-    <div class="form-group">
-        <label asp-for="FirstName"></label>
-        <input asp-for="FirstName" class="form-control" />
-        <span asp-validation-for="FirstName" class="text-danger"></span>
-    </div>
 
-    <!-- LastName Field -->
-    <div class="form-group">
-        <label asp-for="LastName"></label>
-        <input asp-for="LastName" class="form-control" />
-        <span asp-validation-for="LastName" class="text-danger"></span>
-    </div>
+    @if (ViewBag.ErrorMessage != null)
+    {
+        <div class="alert alert-danger">
+            <strong>Error:</strong> @ViewBag.ErrorMessage
+        </div>
+    }
 
-    <!-- Email Field -->
-    <div class="form-group">
-        <label asp-for="Email"></label>
-        <input asp-for="Email" class="form-control" type="email" />
-        <span asp-validation-for="Email" class="text-danger"></span>
-    </div>
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger">
+            <ul>
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <li>@error.ErrorMessage</li>
+                }
+            </ul>
+        </div>
+    }
 
-    <!-- Password Field -->
-    <div class="form-group">
-        <label asp-for="Password"></label>
-        <input asp-for="Password" class="form-control" type="password" />
-        <span asp-validation-for="Password" class="text-danger"></span>
-    </div>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCSc3WNHjhSATknV-Y7RX4ZhBFDJKbm868&callback=initMap" async defer></script>
+    <script>
+        let map, marker;
 
-    <!-- BirthDate Field -->
-    <div class="form-group">
-        <label asp-for="BirthDate"></label>
-        <input asp-for="BirthDate" class="form-control" type="date" />
-        <span asp-validation-for="BirthDate" class="text-danger"></span>
-    </div>
+        function initMap() {
+            const initialLocation = { lat: 41.0082, lng: 28.9784 }; // Default: İstanbul
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: initialLocation,
+                zoom: 8,
+            });
 
-    <!-- Gender Field -->
-    <div class="form-group">
-        <label asp-for="Gender"></label>
-        <select asp-for="Gender" class="form-control">
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
-        </select>
-        <span asp-validation-for="Gender" class="text-danger"></span>
-    </div>
+            marker = new google.maps.Marker({
+                position: initialLocation,
+                map: map,
+                draggable: true,
+            });
 
-    <!-- PhoneNumber Field -->
-    <div class="form-group">
-        <label asp-for="PhoneNumber"></label>
-        <input asp-for="PhoneNumber" class="form-control" />
-        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-    </div>
+            // Update Konum field on marker drag
+            marker.addListener("dragend", () => {
+                const position = marker.getPosition();
+                document.getElementById("konum").value =
+                    position.lat().toFixed(6) + ", " + position.lng().toFixed(6);
+            });
+        }
+    </script>
 
-    <!-- Profile Picture Field -->
-    <div class="form-group">
-        <label asp-for="ProfilePicture">Profile Picture</label>
-        <input asp-for="ProfilePicture" class="form-control" type="file" />
-        <span asp-validation-for="ProfilePicture" class="text-danger"></span>
-    </div>
+    <form asp-action="Register" method="post" enctype="multipart/form-data">
+        <!-- Username Field -->
+        <div class="form-group">
+            <label asp-for="Username">Kullanıcı Adı</label>
+            <input asp-for="Username" class="form-control" />
+            <span asp-validation-for="Username" class="text-danger"></span>
+        </div>
 
-    <!-- Konum Field -->
-    <div class="form-group">
-        <label asp-for="Konum"></label>
-        <input asp-for="Konum" class="form-control" placeholder="Enter your location" />
-        <span asp-validation-for="Konum" class="text-danger"></span>
-    </div>
+        <!-- FirstName Field -->
+        <div class="form-group">
+            <label asp-for="FirstName">Ad</label>
+            <input asp-for="FirstName" class="form-control" />
+            <span asp-validation-for="FirstName" class="text-danger"></span>
+        </div>
 
-    <!-- Categories Field -->
-    <div class="form-group">
-        <label>Select Categories of Interest</label>
-        <select asp-for="SelectedCategories" class="form-control" multiple>
-            @foreach (var category in ViewBag.Categories)
-            {
-                <option value="@category.CategoryID">@category.CategoryName</option>
-            }
-        </select>
-    </div>
+        <!-- LastName Field -->
+        <div class="form-group">
+            <label asp-for="LastName">Soyad</label>
+            <input asp-for="LastName" class="form-control" />
+            <span asp-validation-for="LastName" class="text-danger"></span>
+        </div>
 
-    <button type="submit" class="btn btn-primary">Register</button>
-</form>
+        <!-- Email Field -->
+        <div class="form-group">
+            <label asp-for="Email">E-posta</label>
+            <input asp-for="Email" class="form-control" type="email" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-group">
+            <label asp-for="Password">Şifre</label>
+            <input asp-for="Password" class="form-control" type="password" />
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+
+        <!-- BirthDate Field -->
+        <div class="form-group">
+            <label asp-for="BirthDate">Doğum Tarihi</label>
+            <input asp-for="BirthDate" class="form-control" type="date" />
+            <span asp-validation-for="BirthDate" class="text-danger"></span>
+        </div>
+
+        <!-- Gender Field -->
+        <div class="form-group">
+            <label asp-for="Gender">Cinsiyet</label>
+            <select asp-for="Gender" class="form-control">
+                <option value="Male">Erkek</option>
+                <option value="Female">Kadın</option>
+                <option value="Other">Diğer</option>
+            </select>
+            <span asp-validation-for="Gender" class="text-danger"></span>
+        </div>
+
+        <!-- PhoneNumber Field -->
+        <div class="form-group">
+            <label asp-for="PhoneNumber">Telefon Numarası</label>
+            <input asp-for="PhoneNumber" class="form-control" />
+            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+        </div>
+
+        <!-- Profile Picture Field -->
+        <div class="form-group">
+            <label asp-for="ProfilePicture">Profil Resmi</label>
+            <input asp-for="ProfilePicture" class="form-control" type="file" />
+            <span asp-validation-for="ProfilePicture" class="text-danger"></span>
+        </div>
+
+        <!-- Map for Location -->
+        <div class="form-group">
+            <label>Konum</label>
+            <div id="map" style="width: 100%; height: 300px;"></div>
+            <input id="konum" asp-for="Konum" class="form-control" readonly />
+            <span asp-validation-for="Konum" class="text-danger"></span>
+        </div>
+
+        <!-- Categories Field -->
+        <div class="form-group">
+            <label>İlgi Alanları Seçin</label>
+            <div class="checkbox-group">
+                @foreach (var category in ViewBag.Categories)
+                {
+                    <div class="checkbox-item">
+                        <input class="form-check-input" type="checkbox" name="SelectedCategories" value="@category.CategoryID" id="category-@category.CategoryID">
+                        <label class="form-check-label" for="category-@category.CategoryID">
+                            @category.CategoryName
+                        </label>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-custom">Kayıt Ol</button>
+    </form>
+
+</div>
+
+<style>
+    /* Sayfa genel stili */
+    body {
+        background-color: #9be6c5; /* Açık su yeşili arka plan */
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    .form-group label {
+        color: #00695c; /* Koyu su yeşili etiket rengi */
+    }
+
+    .form-control {
+        border: 1px solid #00695c; /* Koyu su yeşili border */
+        border-radius: 5px;
+        padding: 10px;
+        font-size: 1rem;
+    }
+
+    .btn-custom {
+        background-color: #00695c; /* Koyu su yeşili buton */
+        color: #fff;
+        padding: 10px;
+        width: 500px; /* Corrected typo from 500x to 500px */
+        font-size: 1.2rem;
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease-in-out;
+    }
+
+        .btn-custom:hover {
+            background-color: #004d40; /* Daha koyu su yeşili */
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+    .checkbox-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+    }
+
+        .checkbox-item label {
+            margin-left: 5px;
+            font-size: 1rem;
+        }
+
+    /* Hata mesajları */
+    .alert {
+        margin-bottom: 20px;
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+</style>

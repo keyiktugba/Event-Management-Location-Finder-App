@@ -10,24 +10,24 @@ namespace Yazlab_2.Models.Service
         {
             var smtpClient = new SmtpClient("smtp.gmail.com")
             {
-                Port = 587, // TLS için doğru port
-                Credentials = new NetworkCredential("tugbik6@gmail.com", "kvni zwot sgfx gouj"), // Gmail hesabınızın bilgileri
-                EnableSsl = true // SSL/TLS bağlantısı aktif
+                Port = 587, 
+                Credentials = new NetworkCredential("tugbik6@gmail.com", "kvni zwot sgfx gouj"), 
+                EnableSsl = true 
             };
 
             var mailMessage = new MailMessage
             {
-                From = new MailAddress("your-email@gmail.com"), // Gönderen e-posta adresi
+                From = new MailAddress("your-email@gmail.com"), 
                 Subject = "Şifre Sıfırlama Talebi",
                 Body = $"Şifrenizi sıfırlamak için linke tıklayın: {resetLink}",
-                IsBodyHtml = true // HTML içerik kullanıyorsanız true yapın
+                IsBodyHtml = true 
             };
 
-            mailMessage.To.Add(toEmail); // Alıcı e-posta adresi
+            mailMessage.To.Add(toEmail); 
 
             try
             {
-                await smtpClient.SendMailAsync(mailMessage); // E-posta gönder
+                await smtpClient.SendMailAsync(mailMessage); 
             }
             catch (Exception ex)
             {

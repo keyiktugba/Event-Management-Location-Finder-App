@@ -1,0 +1,36 @@
+﻿@using Yazlab_2.Models.ViewModel
+@model EventMessagesViewModel
+
+<h2 class="text-center mb-4 text-primary" style="font-family: 'Arial', sans-serif;">📩 Etkinlik Mesajları 📩</h2>
+
+<div class="table-responsive mt-4">
+    <table class="table table-bordered table-striped">
+        <thead class="thead-light" style="background-color: #FFFBF0;">
+            <tr>
+                <th>Mesaj</th>
+                <th>Gönderen</th>
+                <th>Tarih</th>
+                <th>İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var message in Model.Messages)
+            {
+                <tr style="background-color: #FFFBF0;">
+                    <td>@message.MesajMetni</td>
+                    <td>@message.Gonderici.UserName</td>
+                    <td>@message.GonderimZamani.ToShortDateString()</td>
+                    <td class="d-flex justify-content-start">
+                        <!-- Mesajı Silme Butonu -->
+                        <form asp-action="DeleteMessage" asp-controller="Admin" method="post" style="display:inline;">
+                            <input type="hidden" name="messageId" value="@message.MesajID" />
+                            <button type="submit" class="btn btn-danger btn-sm" style="background-color: #DC3545; border-color: #DC3545;" onclick="return confirm('Bu mesajı silmek istediğinize emin misiniz?');">
+                                ❌ Sil
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

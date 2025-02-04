@@ -18,12 +18,12 @@ namespace Yazlab_2.Controllers
 
         public IActionResult Index()
         {
-            var username = User.Identity.Name; // Giriş yapmış kullanıcının kullanıcı adı
+            var username = User.Identity.Name;
             var user = _context.Users.FirstOrDefault(u => u.UserName == username);
 
             if (user != null)
             {
-                // Kullanıcının katıldığı etkinliklerin konumlarını ve etkinlik adlarını alın
+                
                 var etkinlikBilgileri = _context.Katilimcilar
                     .Where(k => k.KullaniciID == user.Id)
                     .Join(_context.Etkinlikler,
@@ -34,11 +34,10 @@ namespace Yazlab_2.Controllers
                               e.Konum,
                               e.EtkinlikAdi,
                               e.ID,
-                              Katilim = true // Katıldığı etkinlikler
+                              Katilim = true 
                           })
                     .ToList();
 
-                // Kullanıcının katılmadığı etkinlikleri al
                 var katilmadigiEtkinlikler = _context.Etkinlikler
                     .Where(e => !_context.Katilimcilar.Any(k => k.KullaniciID == user.Id && k.EtkinlikID == e.ID))
                     .Select(e => new
@@ -46,35 +45,31 @@ namespace Yazlab_2.Controllers
                         e.Konum,
                         e.EtkinlikAdi,
                         e.ID,
-                        Katilim = false // Katılmadığı etkinlikler
+                        Katilim = false 
                     })
                     .ToList();
 
-                // Hem katıldığı hem katılmadığı etkinlikleri birleştirin
                 var etkinlikler = etkinlikBilgileri.Concat(katilmadigiEtkinlikler).ToList();
 
-                // Etkinliklerin konumlarını ve adlarını birleştirin
                 var etkinlikKonumlari = etkinlikler.Select(e => e.Konum).ToList();
                 var etkinlikAdlari = etkinlikler.Select(e => e.EtkinlikAdi).ToList();
                 var etkinlikKatilimDurumu = etkinlikler.Select(e => e.Katilim).ToList();
 
-                // Kullanıcının kendi konumunu listeye ekleyin
                 if (!string.IsNullOrEmpty(user.Konum))
                 {
-                    etkinlikKonumlari.Insert(0, user.Konum); // Kendi konumunu listenin başına ekle
-                    etkinlikAdlari.Insert(0, "Kendi Konumunuz");
+                    etkinlikKonumlari.Insert(0, user.Konum); 
+
                 }
 
-                // ViewData'ya etkinliklerin konumlarını, adlarını ve katılım durumlarını ekleyin
-                ViewData["Konumlar"] = etkinlikKonumlari.Any() ? etkinlikKonumlari : new List<string> { "51.505,-0.09" }; // Varsayılan konum
-                ViewData["EtkinlikAdlari"] = etkinlikAdlari.Any() ? etkinlikAdlari : new List<string> { "Etkinlik Adı Bulunamadı" }; // Varsayılan etkinlik adı
+                ViewData["Konumlar"] = etkinlikKonumlari.Any() ? etkinlikKonumlari : new List<string> { "51.505,-0.09" }; 
+                ViewData["EtkinlikAdlari"] = etkinlikAdlari.Any() ? etkinlikAdlari : new List<string> { "Etkinlik Adı Bulunamadı" }; 
                 ViewData["KatilimDurumu"] = etkinlikKatilimDurumu;
             }
             else
             {
-                ViewData["Konumlar"] = new List<string> { "51.505,-0.09" }; // Varsayılan konum
-                ViewData["EtkinlikAdlari"] = new List<string> { "Etkinlik Adı Bulunamadı" }; // Varsayılan etkinlik adı
-                ViewData["KatilimDurumu"] = new List<bool> { false }; // Varsayılan katılım durumu
+                ViewData["Konumlar"] = new List<string> { "51.505,-0.09" };
+                ViewData["EtkinlikAdlari"] = new List<string> { "Etkinlik Adı Bulunamadı" }; 
+                ViewData["KatilimDurumu"] = new List<bool> { false }; 
             }
 
             return View();

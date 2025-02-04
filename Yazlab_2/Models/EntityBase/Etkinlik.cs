@@ -28,6 +28,8 @@
         [Required]
         public string Konum { get; set; }
 
+        public string Foto { get; set; } // Fotoğraf URL'si
+
         [ForeignKey("CategoryID")]
         public Kategori Category { get; set; }
 
@@ -36,7 +38,6 @@
         // Yeni IsApproved alanı
         public bool IsApproved { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+
     }
-
-
 }

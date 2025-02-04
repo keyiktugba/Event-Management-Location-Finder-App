@@ -1,0 +1,171 @@
+﻿@model Yazlab_2.Models.ViewModel.EtkinlikDetayViewModel
+<style>
+    /* Genel sayfa düzeni */
+    .container {
+        margin-top: 20px;
+        background-color: #e8f5f2; /* Su yeşili arka plan */
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn {
+        border-radius: 50px;
+        padding: 12px 24px;
+        font-size: 16px;
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+
+    .btn-primary {
+        background-color: #28a745; /* Su yeşili */
+        border: none;
+        color: #ffffff;
+        transition: background-color 0.3s, transform 0.3s;
+    }
+
+        .btn-primary:hover {
+            background-color: #218838; /* Koyu su yeşili */
+            transform: scale(1.05);
+        }
+
+    .col-md-8, .col-md-4 {
+        margin-bottom: 20px;
+    }
+
+    .col-md-8 {
+        border-right: 2px solid #ddd;
+        padding-right: 20px;
+    }
+
+    .col-md-4 {
+        padding-left: 20px;
+    }
+
+    .etkinlik-details {
+        background-color: #ffffff;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+
+        .etkinlik-details h2 {
+            color: #007bff;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .etkinlik-details div {
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .etkinlik-details strong {
+            color: #28a745; /* Su yeşili */
+        }
+
+    /* Harita alanı */
+    #mapid {
+        border-radius: 12px;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+
+img {
+    width: 300px; /* Genişliği 300px olarak ayarladık */
+    height: auto; /* Yüksekliği otomatik ayarla */
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+
+    /* Harita başlığı */
+    .map-title {
+        margin-bottom: 15px;
+        color: #333;
+        font-size: 20px;
+        font-weight: bold;
+    }
+</style>
+
+<div class="container">
+    <div class="row">
+        <!-- Etkinlik Detayları Sol Taraf -->
+        <div class="col-md-8">
+            <div class="etkinlik-details">
+                <h2>@Model.EtkinlikAdi</h2>
+                <!-- Etkinlik Fotoğrafı -->
+                @if (!string.IsNullOrEmpty(Model.EtkinlikFoto))
+                {
+                    <div>
+                        <img src="@Url.Content(Model.EtkinlikFoto)" alt="Etkinlik Fotoğrafı" class="img-fluid" />
+                    </div>
+                }
+
+                <div>
+                    <strong>Kategori:</strong> @Model.KategoriAdi
+                </div>
+                <div>
+                    <strong>Açıklama:</strong> @Model.Aciklama
+                </div>
+                <div>
+                    <strong>Tarih:</strong> @Model.Tarih.ToString("dd MMM yyyy")
+                </div>
+                <div>
+                    <strong>Saat:</strong> @Model.Saat.ToString(@"hh\:mm")
+                </div>
+                <div>
+                    <strong>Etkinlik Süresi:</strong> @Model.EtkinlikSuresi
+                </div>
+                <div>
+                    <strong>Konum:</strong> @Model.Konum
+                </div>
+
+                <a href="@Url.Action("Index", "Etkinlik")" class="btn btn-primary btn-sm mt-3">Geri</a>
+            </div>
+        </div>
+
+        <!-- OpenStreetMap Sağ Taraf -->
+        <div class="col-md-4">
+            <h3 class="map-title">Harita</h3>
+            <div id="mapid" style="width: 100%; height: 400px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+    // Konum bilgisini Razor'dan JavaScript'e aktarma
+    var konum = '@Model.Konum'; // Örneğin: "48.027540, 0.811661"
+
+    // Konumu virgülle ayırarak enlem ve boylam bilgilerini alıyoruz
+    var konumArray = konum.split(',');
+    var latitude = parseFloat(konumArray[0].trim());
+    var longitude = parseFloat(konumArray[1].trim());
+
+    // Harita oluşturuluyor
+    var map = L.map('mapid').setView([latitude, longitude], 13);
+
+    // OpenStreetMap katmanını ekliyoruz
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // İşaretçi simgesi
+    var blueIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+
+    // İşaretçi ekliyoruz
+    var marker = L.marker([latitude, longitude], { icon: blueIcon }).addTo(map);
+    marker.bindPopup("<b>@Model.EtkinlikAdi</b><br>@Model.Aciklama");
+</script>

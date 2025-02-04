@@ -1,137 +1,456 @@
-﻿@model Yazlab_2.Models.ViewModel.ProfileViewModel
+﻿@using Yazlab_2.Models.EntityBase
+@using Newtonsoft.Json;
+@model Yazlab_2.Models.ViewModel.ProfileViewModel
 
-<h2>Profilim</h2>
+@{
+    var eventJoinSuccessMessage = TempData["EventJoinSuccessMessage"] as string;
+    var eventJoinErrorMessage = TempData["EventJoinErrorMessage"] as string;
+}
 
-<form asp-action="Profile" method="post" enctype="multipart/form-data">
-    <div class="profile-picture-container">
-        <img src="@(Model.User.ProfilePicture ?? "/images/default-profile.png")" alt="Profile Picture" class="profile-picture" />
+@if (!string.IsNullOrEmpty(eventJoinSuccessMessage))
+{
+    <div class="alert alert-success">
+        @eventJoinSuccessMessage
     </div>
+}
 
-    <div class="form-group">
-        <label asp-for="User.FirstName"></label>
-        <input asp-for="User.FirstName" class="form-control" />
+@if (!string.IsNullOrEmpty(eventJoinErrorMessage))
+{
+    <div class="alert alert-danger">
+        @eventJoinErrorMessage
     </div>
+}
 
-    <div class="form-group">
-        <label asp-for="User.LastName"></label>
-        <input asp-for="User.LastName" class="form-control" />
-    </div>
+@{
+    var welcomeMessage = TempData["WelcomeMessage"] as string;
+}
 
-    <div class="form-group">
-        <label asp-for="User.Email"></label>
-        <input asp-for="User.Email" class="form-control" type="email" />
+@if (!string.IsNullOrEmpty(welcomeMessage))
+{
+    <div class="alert alert-success">
+        @welcomeMessage
     </div>
+}
+@if (TempData["EventRecommendations"] != null)
+{
+    var eventRecommendationsJson = TempData["EventRecommendations"].ToString();
+    var eventRecommendations = JsonConvert.DeserializeObject<List<Etkinlik>>(eventRecommendationsJson);
 
-    <div class="form-group">
-        <label asp-for="User.BirthDate"></label>
-        <input asp-for="User.BirthDate" class="form-control" type="date" />
-    </div>
-
-    <div class="form-group">
-        <label asp-for="User.Gender"></label>
-        <select asp-for="User.Gender" class="form-control">
-            <option value="Male">Erkek</option>
-            <option value="Female">Kadın</option>
-            <option value="Other">Diğer</option>
-        </select>
-    </div>
-
-    <div class="form-group">
-        <label asp-for="User.PhoneNumber"></label>
-        <input asp-for="User.PhoneNumber" class="form-control" type="tel" />
-    </div>
-
-    <div class="form-group">
-        <label asp-for="User.Konum"></label>
-        <input asp-for="User.Konum" class="form-control" />
-    </div>
-    <h3>İlgi Alanlarınız</h3>
-    @if (Model.Interests != null && Model.Interests.Any())
-    {
+    <div class="alert alert-warning">
+        <strong>Öneri:</strong> Zaman çakışması nedeniyle katılamadığınız etkinlik yerine aşağıdaki etkinlikleri gözden geçirebilirsiniz:
         <ul>
-            @foreach (var interest in Model.Interests)
+            @foreach (var etkinlik in eventRecommendations)
             {
-                <li>@interest.Category.CategoryName</li>
+                <li>@etkinlik.EtkinlikAdi - @etkinlik.Tarih.ToString("d MMM yyyy")</li>
             }
         </ul>
-    }
-    else
-    {
-        <p>Henüz ilgi alanı eklemediniz.</p>
-    }
+    </div>
+}
 
+<div class="container mt-4">
+    <!-- Profil ve Harita Butonları -->
+    <div class="d-flex justify-content-end align-items-center gap-3 position-fixed" style="top: 20px; right: 20px; z-index: 1000; background: white; padding: 10px; border-radius: 10px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
 
+        <!-- Puan Yazısı -->
+        <span class="align-middle">Puan: @Model.TotalPoints</span>
 
-</form>
+        <!-- Harita Butonu -->
+        <a asp-controller="Map" asp-action="Index" class="btn btn-outline-primary btn-lg p-0 map-button">
+            <img src="/images/planet-earth.png" alt="Harita Ikonu" class="map-icon">
+        </a>
 
-<h3>Tüm Etkinlikler</h3>
+        <!-- Bildirim Butonu -->
+        @if (ViewContext.RouteData.Values["controller"]?.ToString() == "User" &&
+        ViewContext.RouteData.Values["action"]?.ToString() == "Profile")
+        {
+            <a asp-action="UserNotifications" asp-controller="Notification" class="btn btn-outline-warning btn-lg notification-button position-relative p-0" style="border: none;">
+                <img src="/images/bildirimicon.png" alt="Bildirim Ikonu" class="notification-icon">
+                <span id="notification-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"></span>
+            </a>
+        }
 
-<div class="row">
-    @foreach (var etkinlik in Model.Events)
-    {
-        <div class="col-md-4 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title">@etkinlik.EtkinlikAdi</h5>
-                    <p class="card-text">@etkinlik.Aciklama</p>
-                    <p class="card-text">
-                        <small class="text-muted">
-                            @etkinlik.Tarih.ToString("dd MMM yyyy") - @etkinlik.Saat.ToString(@"hh\:mm")
-                        </small>
-                    </p>
-                    <form asp-action="JoinEvent" asp-controller="User" method="post">
-                        <input type="hidden" name="eventId" value="@etkinlik.ID" />
-                        <button type="submit" class="btn btn-success btn-sm">Katıl</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    }
-</div>
-<div class="mb-3">
-    <a asp-action="EditUser" asp-controller="User" asp-route-userId="@(Model.User.Id)" class="btn btn-warning">Profili Düzenle</a>
+        <!-- Profil Butonu -->
+        <a asp-action="ProfileDetails" asp-controller="User" class="btn btn-outline-secondary btn-lg profile-button p-0" style="border: none;">
+            <img src="@(Model.User.ProfilePicture ?? "/images/default-profile.png")" alt="Profile Picture" class="profile-icon rounded-circle">
+        </a>
+
+    </div>
 </div>
 
-<!-- Etkinlik oluştur butonu -->
-<div class="mb-3">
-    <a asp-action="Olustur" asp-controller="User" class="btn btn-primary">Etkinlik Oluştur</a>
-</div>
 
-<!-- Kendi Etkinliklerim Butonu -->
-<div class="mb-3">
-    <a asp-action="Myevents" asp-controller="User" class="btn btn-info">Kendi Etkinliklerim</a>
-</div>
 
-<div class="mb-3">
-    <a asp-action="JoinedEvents" asp-controller="User" class="btn btn-info">Katıldığım Etkinliklerim</a>
-</div>
-<div class="mb-3">
-    <a asp-controller="Map" asp-action="Index" class="btn btn-primary">
-        <i class="bi bi-map"></i> Harita
+
+<!-- Ek Butonlar -->
+<div class="d-flex justify-content-start gap-3 mt-4">
+    <a asp-action="Index" asp-controller="Etkinlik" class="btn btn-primary btn-sm">
+        <img src="/images/4515712.png" alt="Event Icon" style="width: 35px; height: 35px; margin-right: 5px;">
+        Tüm Etkinlikler
     </a>
-</div>
-<div class="mb-3">
-    <a asp-action="Oneriler" asp-controller="User" class="btn btn-secondary">Öneriler</a>
+
+    <a asp-action="Olustur" asp-controller="User" class="btn btn-primary btn-sm">
+        <img src="/images/magic-wand.png" alt="Edit Icon" style="width: 35px; height: 35px; margin-right: 5px;">
+        Etkinlik Oluştur
+    </a>
+
+    <a asp-action="Myevents" asp-controller="User" class="btn btn-primary btn-sm">
+        <img src="/images/4515829.png" alt="Event Icon" style="width: 35px; height: 35px; margin-right: 5px;">
+        Benim Etkinliklerim
+    </a>
+
+    <a asp-action="JoinedEvents" asp-controller="User" class="btn btn-primary btn-sm">
+        <img src="/images/red-carpet.png" alt="My Event Icon" style="width: 35px; height: 35px; margin-right: 5px;">
+        Katıldığım Etkinlikler
+    </a>
+
+    <a asp-action="FeedbackForm" asp-controller="User" class="btn btn-primary btn-sm">
+        <img src="/images/yildizicon.png" alt="Feedback Icon" style="width: 35px; height: 35px; margin-right: 5px;">
+        Geri Bildirim
+    </a>
+
 </div>
 
 
-<div class="mb-3">
-    <a asp-action="JoinedEvents" asp-controller="User" class="btn btn-info">Mesajlaşma</a>
-</div>
+
+
 <style>
-    .profile-picture-container {
-        text-align: center;
-        margin-bottom: 20px;
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #333; /* Dark grey text for better readability */
+    }
+    /* Harita butonu */
+    .map-button {
+        border-radius: 50%; /* Butonu yuvarlak yapar */
+        width: 30px; /* Butonun genişliğini artırır */
+        height: 30px; /* Butonun yüksekliğini artırır */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: none;
+        background-color: transparent;
+        transition: transform 0.3s, box-shadow 0.3s;
     }
 
-    .profile-picture {
-        width: 150px;
-        height: 150px;
-        border-radius: 50%;
+        .map-button:hover {
+            transform: scale(1.1); /* Hover sırasında büyütme efekti */
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Hafif gölge efekti */
+        }
+    /* Bildirim butonu */
+    .notification-button {
+        border-radius: 50%; /* Yuvarlak buton */
+        width: 50px; /* Genişlik */
+        height: 50px; /* Yükseklik */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: none;
+        background-color: transparent;
+        transition: transform 0.3s, box-shadow 0.3s;
     }
+
+        .notification-button:hover {
+            transform: scale(1.1); /* Hover sırasında büyütme efekti */
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Gölgeleme */
+        }
+
+    /* Bildirim ikonu */
+    .notification-icon {
+        width: 20px; /* İkon boyutunu büyüt */
+        height: 20px; /* İkon boyutunu büyüt */
+        border-radius: 50%; /* İkonun yuvarlak görünmesini sağlar */
+    }
+
+    /* Profil butonu */
+    .profile-button {
+        border-radius: 50%; /* Yuvarlak buton */
+        width: 60px; /* Genişlik */
+        height: 60px; /* Yükseklik */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: none;
+        background-color: transparent;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+        .profile-button:hover {
+            transform: scale(1.1); /* Hover sırasında büyütme efekti */
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Gölgeleme */
+        }
+
+    /* Profil ikonu */
+    .profile-icon {
+        width: 50px; /* İkon boyutunu büyüt */
+        height: 50px; /* İkon boyutunu büyüt */
+        border-radius: 50%; /* İkonun yuvarlak görünmesini sağlar */
+    }
+
+    /* Harita ikonu */
+    .map-icon {
+        width: 100%; /* İkonun butonun tüm genişliğine uyum sağlamasını sağlar */
+        height: 100%; /* İkonun butonun tüm yüksekliğine uyum sağlamasını sağlar */
+        border-radius: 50%; /* İkonun köşelerini yuvarlatır */
+    }
+
+    .btn-outline-primary,
+    .btn-outline-warning,
+    .btn-outline-secondary {
+        border: none;
+        background-color: transparent;
+        padding: 0; /* İç padding'i kaldırır */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px; /* Buton genişliğini ayarlar */
+        height: 50px; /* Buton yüksekliğini ayarlar */
+    }
+
+        .btn-outline-primary img,
+        .btn-outline-warning img,
+        .btn-outline-secondary img {
+            width: 100%; /* İkonun butonun tüm genişliğine uyum sağlamasını sağlar */
+            height: 100%; /* İkonun butonun tüm yüksekliğine uyum sağlamasını sağlar */
+        }
+
+
+    .alert-success, .alert-danger, .alert-warning {
+        font-family: 'Arial', sans-serif;
+        font-weight: 500; /* Slightly bold for alerts */
+    }
+
+    .section-title {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700; /* Bold title */
+        color: #4a4a4a; /* Dark grey for contrast */
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+    }
+
+    .event-card {
+        border-radius: 12px;
+        background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        font-family: 'Arial', sans-serif;
+    }
+
+        .event-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
 
     .card-title {
-        font-size: 1.25rem;
-        font-weight: bold;
+        font-size: 1.1rem;
+        font-weight: 600; /* Bold card titles */
+        color: #2c3e50; /* Dark blue for titles */
     }
+
+    .card-text {
+        font-size: 0.95rem;
+        color: #555; /* Medium grey for descriptions */
+        line-height: 1.6;
+    }
+
+    .event-time {
+        font-size: 0.85rem;
+        color: #777; /* Light grey for less important details */
+    }
+
+    .btn {
+        font-family: 'Arial', sans-serif;
+        font-weight: 600; /* Buton metnini kalınlaştırır */
+        text-transform: uppercase; /* Büyük harfler için */
+        border-radius: 8px; /* Yuvarlak köşeler */
+        padding: 10px 20px; /* Dış boşluk */
+        transition: all 0.3s ease; /* Geçiş animasyonu */
+    }
+
+        .btn:hover, .btn:focus {
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1); /* Hover sırasında gölge */
+            transform: translateY(-3px); /* Yukarı kaydırma efekti */
+        }
+
+    .btn-info {
+        background-color: #17a2b8;
+        border-color: #17a2b8;
+        color: #ffffff;
+    }
+
+        .btn-info:hover {
+            background-color: #138496;
+            border-color: #138496;
+        }
+
+
+    .btn-success {
+        background-color: #28a745;
+        border-color: #28a745;
+        color: #ffffff;
+    }
+
+        .btn-success:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+        }
+
+
+    .btn-primary {
+        background-color: #7dd4bc; /* A lighter color for contrast */
+        border-color: #bea7c7; /* A matching border color */
+        color: #333; /* Dark text for readability */
+    }
+
+        .btn-primary:hover {
+            background-color: #c6c8cc; /* Slightly darker on hover */
+            border-color: #b1b3b8;
+        }
+
+
+
+    .card-img-top {
+        height: 150px;
+        object-fit: cover;
+        border-radius: 12px 12px 0 0;
+    }
+
+    .scrolling-container {
+        overflow-x: auto;
+        white-space: nowrap;
+        padding: 10px;
+        background-color: #edfcf9;
+        border-radius: 8px;
+        box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .scrollbar-thumb {
+        background: #ccc;
+        border-radius: 4px;
+    }
+
+        .scrollbar-thumb:hover {
+            background: #aaa;
+        }
+
+    .position-relative .badge {
+        font-size: 0.75rem; /* Adjust badge size */
+        background-color: #d9534f; /* Red for notifications */
+    }
+
 </style>
+
+<!-- İlgi Alanlarına Göre Etkinlikler -->
+<div class="event-section">
+    <h5 class="section-title">
+        <i class="fas fa-heart text-danger"></i> İlgi Alanlarınıza Göre Etkinlikler
+    </h5>
+    <div class="row flex-nowrap overflow-auto">
+        @foreach (var etkinlik in Model.Recommendations.InterestBased)
+        {
+            <div class="col-8 col-sm-6 col-md-4 col-lg-3 mb-3">
+                <div class="card event-card shadow h-100">
+                    <img src="@(etkinlik.Foto ?? "/images/default-event.png")" class="card-img-top" alt="@etkinlik.EtkinlikAdi">
+                    <div class="card-body">
+                        <h6 class="card-title text-truncate">@etkinlik.EtkinlikAdi</h6>
+                        <p class="card-text text-truncate">@etkinlik.Aciklama</p>
+                        <p class="event-time">
+                            <i class="far fa-calendar-alt"></i> @etkinlik.Tarih.ToString("dd MMM yyyy")
+                            <i class="far fa-clock ms-2"></i> @etkinlik.Saat.ToString(@"hh\:mm")
+                        </p>
+                        <div class="d-flex justify-content-between">
+                            <a href="@Url.Action("Details", "Etkinlik", new { id = etkinlik.ID })" class="btn btn-outline-primary btn-sm">Detay</a>
+                            <form asp-action="JoinEvent" asp-controller="User" method="post">
+                                <input type="hidden" name="eventId" value="@etkinlik.ID" />
+                                <button type="submit" class="btn btn-success btn-sm">Katıl</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Geçmiş Etkinliklerinize Göre Etkinlikler -->
+<div class="event-section">
+    <h5 class="section-title">
+        <i class="fas fa-history text-warning"></i> Geçmiş Etkinliklerinize Göre Etkinlikler
+    </h5>
+    <div class="row flex-nowrap overflow-auto">
+        @foreach (var etkinlik in Model.Recommendations.PastEventBased)
+        {
+            <div class="col-8 col-sm-6 col-md-4 col-lg-3 mb-3">
+                <div class="card event-card shadow h-100">
+                    <img src="@(etkinlik.Foto ?? "/images/default-event.png")" class="card-img-top" alt="@etkinlik.EtkinlikAdi">
+                    <div class="card-body">
+                        <h6 class="card-title text-truncate">@etkinlik.EtkinlikAdi</h6>
+                        <p class="card-text text-truncate">@etkinlik.Aciklama</p>
+                        <p class="event-time">
+                            <i class="far fa-calendar-alt"></i> @etkinlik.Tarih.ToString("dd MMM yyyy")
+                            <i class="far fa-clock ms-2"></i> @etkinlik.Saat.ToString(@"hh\:mm")
+                        </p>
+                        <div class="d-flex justify-content-between">
+                            <a href="@Url.Action("Details", "Etkinlik", new { id = etkinlik.ID })" class="btn btn-outline-primary btn-sm">Detay</a>
+                            <form asp-action="JoinEvent" asp-controller="User" method="post">
+                                <input type="hidden" name="eventId" value="@etkinlik.ID" />
+                                <button type="submit" class="btn btn-success btn-sm">Katıl</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Konumunuza Göre Etkinlikler -->
+<div class="event-section">
+    <h5 class="section-title">
+        <i class="fas fa-map-marker-alt text-primary"></i> Konumunuza Göre Etkinlikler
+    </h5>
+    <div class="row flex-nowrap overflow-auto">
+        @foreach (var etkinlik in Model.Recommendations.LocationBased)
+        {
+            <div class="col-8 col-sm-6 col-md-4 col-lg-3 mb-3">
+                <div class="card event-card shadow h-100">
+                    <img src="@(etkinlik.Foto ?? "/images/default-event.png")" class="card-img-top" alt="@etkinlik.EtkinlikAdi">
+                    <div class="card-body">
+                        <h6 class="card-title text-truncate">@etkinlik.EtkinlikAdi</h6>
+                        <p class="card-text text-truncate">@etkinlik.Aciklama</p>
+                        <p class="event-time">
+                            <i class="far fa-calendar-alt"></i> @etkinlik.Tarih.ToString("dd MMM yyyy")
+                            <i class="far fa-clock ms-2"></i> @etkinlik.Saat.ToString(@"hh\:mm")
+                        </p>
+                        <div class="d-flex justify-content-between">
+                            <a href="@Url.Action("Details", "Etkinlik", new { id = etkinlik.ID })" class="btn btn-outline-primary btn-sm">Detay</a>
+                            <form asp-action="JoinEvent" asp-controller="User" method="post">
+                                <input type="hidden" name="eventId" value="@etkinlik.ID" />
+                                <button type="submit" class="btn btn-success btn-sm">Katıl</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+
+
+
+
+
+
+<script>
+    if (window.location.pathname === "/User/Profile") {
+        fetch('/Notification/UnreadNotificationCount')
+            .then(response => response.json())
+            .then(count => {
+                const notificationCountElement = document.getElementById('notification-count');
+                if (count > 0) {
+                    notificationCountElement.textContent = count;
+                    notificationCountElement.style.display = 'inline';
+                }
+            });
+    }
+</script>

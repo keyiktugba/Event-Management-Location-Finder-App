@@ -29,7 +29,7 @@ namespace Yazlab_2.Models.ViewModel
 
         public string UserID { get; set; }
 
-    
+        public IFormFile EventPicture { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 }

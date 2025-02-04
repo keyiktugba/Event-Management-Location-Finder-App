@@ -1,0 +1,79 @@
+﻿@using Yazlab_2.Models.EntityBase
+@{
+    ViewData["Title"] = "FeedbackNotifications";
+}
+
+@model List<Notification>
+
+<h2 class="text-center mb-4">Kullanıcı Geri Bildirimleri</h2>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped table-hover">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Mesaj</th>
+                <th scope="col">Tarih</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var notification in Model)
+            {
+                <tr class="notification-row">
+                    <th scope="row">@notification.Id</th>
+                    <td>@notification.Message</td>
+                    <td>@notification.DateCreated.ToString("dd MMM yyyy HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<style>
+    /* Genel stil */
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #f4f9f9; /* Hafif gri-mavi zemin */
+        color: #333;
+    }
+
+    /* Başlık */
+    h2 {
+        font-size: 2rem;
+        color: #1a6b5c; /* Su yeşili başlık rengi */
+    }
+
+    /* Tablo stil */
+    .table {
+        background-color: #fff; /* Beyaz zemin */
+        border-radius: 10px; /* Yuvarlatılmış köşeler */
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Hafif gölge */
+    }
+
+        .table th {
+            background-color: #1a6b5c; /* Su yeşili başlık arka planı */
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .table td, .table th {
+            padding: 12px 15px; /* Hücre aralığı */
+            text-align: center;
+        }
+
+    /* Tablo satırları */
+    .notification-row:hover {
+        background-color: #eafaf3; /* Hover efekti için hafif su yeşili arka plan */
+        cursor: pointer;
+    }
+
+    .notification-row {
+        transition: background-color 0.3s ease;
+    }
+
+    /* Tarih biçimi ve stil */
+    small {
+        font-size: 0.85rem;
+        color: #777;
+    }
+</style>

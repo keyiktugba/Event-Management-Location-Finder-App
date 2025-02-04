@@ -14,8 +14,8 @@ namespace Yazlab_2.Controllers
     public class AccountController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<User> _userManager;  // UserManager eklenmeli
-        private readonly SignInManager<User> _signInManager;  // SignInManager eklenmeli
+        private readonly UserManager<User> _userManager;  
+        private readonly SignInManager<User> _signInManager; 
         private readonly EmailService _emailService;
         public AccountController(ApplicationDbContext context, UserManager<User> userManager, SignInManager<User> signInManager, EmailService emailService)
         {
@@ -40,7 +40,7 @@ namespace Yazlab_2.Controllers
                 }
                 else if (await _userManager.IsInRoleAsync(user, "User"))
                 {
-                    TempData["SuccessMessage"] = "Hoşgeldin";
+                    TempData["WelcomeMessage"] = "Hoşgeldin";
                     return RedirectToAction("Profile", "User", new { userId = user.Id });
                 }
 
@@ -54,24 +54,26 @@ namespace Yazlab_2.Controllers
 
             return RedirectToAction("Login");
         }
-        // Giriş Sayfası
+
         [HttpGet]
         public IActionResult Login()
         {
             return View(new UserLoginViewModel());
         }
 
+
+
         [HttpGet]
         public IActionResult Register()
         {
-            // Kategorileri model olarak alıp register view'a gönderebiliriz
             var categories = _context.Kategoriler.ToList();
             ViewBag.Categories = categories;
             return View();
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(UserRegisterViewModel model)
+        public async Task<IActionResult> Register(UserRegisterViewModel model, List<int> SelectedCategories)
         {
             if (ModelState.IsValid)
             {
@@ -87,7 +89,6 @@ namespace Yazlab_2.Controllers
                     Konum = model.Konum
                 };
 
-                // Profil fotoğrafını kaydetme işlemi
                 if (model.ProfilePicture != null && model.ProfilePicture.Length > 0)
                 {
                     var fileName = Guid.NewGuid().ToString() + Path.GetExtension(model.ProfilePicture.FileName);
@@ -104,17 +105,14 @@ namespace Yazlab_2.Controllers
                     user.ProfilePicture = "/uploads/" + fileName;
                 }
 
-                // Kullanıcıyı oluşturuyoruz
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
-                    // Kullanıcıya rol atıyoruz
                     await _userManager.AddToRoleAsync(user, "User");
 
-                    // İlgi alanlarını kaydetme işlemi
-                    if (model.SelectedCategories != null && model.SelectedCategories.Any())
+                    if (SelectedCategories != null && SelectedCategories.Any())
                     {
-                        var interests = model.SelectedCategories.Select(categoryId => new Interest
+                        var interests = SelectedCategories.Select(categoryId => new Interest
                         {
                             ID = user.Id,
                             CategoryID = categoryId
@@ -124,21 +122,29 @@ namespace Yazlab_2.Controllers
                         await _context.SaveChangesAsync();
                     }
 
-                    // Kullanıcıyı otomatik olarak giriş yaptırıyoruz
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     return RedirectToAction("Index", "Home");
                 }
 
+              
+                ViewBag.ErrorMessage = "An error occurred while creating the user. Please try again.";
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
             }
+            else
+            {
+               
+                ViewBag.ErrorMessage = "Please correct the errors in the form and try again.";
+            }
 
-            // Hata durumunda kategorileri tekrar view'a gönderiyoruz
             ViewBag.Categories = _context.Kategoriler.ToList();
             return View(model);
         }
+
+
+
 
 
         [HttpGet]
@@ -155,7 +161,8 @@ namespace Yazlab_2.Controllers
                 BirthDate = DateTime.Now,
                 Gender = "Female",
                 PhoneNumber = "05315857939",
-               // ProfilePicture = ".",
+                Konum = "41.103823, 29.024271",
+                ProfilePicture = ".",
             };
 
             IdentityResult result = await _userManager.CreateAsync(user, "AWDj#BBGAq2q2C");
@@ -166,18 +173,18 @@ namespace Yazlab_2.Controllers
             }
             else
             {
-                // Hataları loglayın veya kullanıcıya gösterin
+               
                 foreach (var error in result.Errors)
                 {
-                    Console.WriteLine(error.Description);  // Hataları loglar
-                    ModelState.AddModelError("", error.Description);  // Hataları ModelState'e ekler
+                    Console.WriteLine(error.Description);  
+                    ModelState.AddModelError("", error.Description);  
                 }
                 return Json(new { success = false, message = "Kayıt Başarısız", errors = result.Errors.Select(e => e.Description).ToList() });
             }
 
         }
 
-        // Çıkış Yapma
+        
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync();
@@ -196,7 +203,7 @@ namespace Yazlab_2.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Veritabanında e-posta adresinin kayıtlı olup olmadığını kontrol et
+                
                 var user = await _userManager.FindByEmailAsync(model.Email);
                 if (user == null)
                 {
@@ -204,11 +211,10 @@ namespace Yazlab_2.Controllers
                     return View(model);
                 }
 
-                // Reset link oluşturulması
+                
                 string token = await _userManager.GeneratePasswordResetTokenAsync(user);
                 string resetLink = Url.Action("ResetPassword", "Account", new { token, email = model.Email }, Request.Scheme);
 
-                // Şifre sıfırlama e-postası gönderme
                 await _emailService.SendResetPasswordEmail(model.Email, resetLink);
 
                 return RedirectToAction("ForgotPasswordConfirmation");
@@ -263,37 +269,3 @@ namespace Yazlab_2.Controllers
 
 }
 
-// Kayıt İşlemi
-/*  [HttpPost]
-  public async Task<IActionResult> Register(UserRegisterViewModel model)
-  {
-
-          var user = new User
-          {
-              UserName = model.Username,
-              FirstName = model.FirstName,
-              LastName = model.LastName,
-              Email = model.Email,
-              BirthDate = model.BirthDate,
-              Gender = model.Gender,
-              PhoneNumber = model.PhoneNumber,
-              ProfilePicture = model.ProfilePicture,
-          };
-
-          var result = await _userManager.CreateAsync(user, model.Password);
-          if (result.Succeeded)
-          {
-              // Kullanıcıya "User" rolünü ekleyin
-              await _userManager.AddToRoleAsync(user, "User");
-
-              return RedirectToAction("Login");
-          }
-
-          foreach (var error in result.Errors)
-          {
-              ModelState.AddModelError("", error.Description);
-          }
-
-      return View(model);
-  }//buraya kodu atıcam dokunma
-*/

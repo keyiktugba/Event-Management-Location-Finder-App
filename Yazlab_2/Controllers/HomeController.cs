@@ -12,13 +12,18 @@ namespace Yazlab_2.Controllers
         {
             _logger = logger;
         }
-
         public IActionResult Index()
         {
+            ViewData["ShowVideoModal"] = true; 
             return View();
         }
 
         public IActionResult Privacy()
+        {
+            return View();
+        }
+
+        public IActionResult Login()
         {
             return View();
         }

@@ -11,8 +11,6 @@ public class NotificationController : Controller
     {
         _notificationService = notificationService;
     }
-
-    // Kullanıcıya bildirimleri göster
     [HttpGet]
     [Authorize]
     public async Task<IActionResult> Index()
@@ -22,16 +20,22 @@ public class NotificationController : Controller
         return View(notifications);
     }
 
-    // Bildirimi "okunmuş" olarak işaretle
     [HttpPost]
     [Authorize]
     public async Task<IActionResult> MarkAsRead(int notificationId)
     {
         await _notificationService.MarkNotificationAsReadAsync(notificationId);
-        return RedirectToAction("Index");
+        return RedirectToAction("UserNotifications");
+    }
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> UserNotifications()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var notifications = await _notificationService.GetUserNotificationsAsync(userId);
+        return View(notifications);
     }
 
-    // Yeni bir bildirim ekle (örneğin admin veya sistem tarafından)
     [HttpPost]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateNotification(string userId, string message)
@@ -39,4 +43,13 @@ public class NotificationController : Controller
         await _notificationService.AddNotificationAsync(userId, message);
         return RedirectToAction("Index");
     }
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> UnreadNotificationCount()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var count = await _notificationService.GetUnreadNotificationCountAsync(userId);
+        return Json(count); 
+    }
+
 }

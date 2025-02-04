@@ -1,49 +1,87 @@
 ﻿@model List<Yazlab_2.Models.EntityBase.User>
 
-<h2>Admin Paneli</h2>
-
-<h3>Kullanıcılar</h3>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Ad</th>
-            <th>Email</th>
-            <th>Telefon</th>
-            <th>İşlem</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var user in Model)
-        {
-            <tr>
-                <td>@user.UserName</td>
-                <td>@user.Email</td>
-                <td>@user.PhoneNumber</td>
-                <td>
-                    <form method="post" action="@Url.Action("DeleteUser", "Admin")">
-                        <input type="hidden" name="userId" value="@user.Id" />
-                        <button type="submit" class="btn btn-danger">Sil</button>
-                    </form>
-                
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
-
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+@{
+    Layout = "_Layout";
 }
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
-}
-<!-- Kendi Etkinliklerim Butonu -->
-<div class="mb-3">
-    <a asp-action="PendingEvents" asp-controller="Admin" class="btn btn-info">Onaylanıcak Etkinliklerim</a>
+
+<h2 class="text-center mb-4" style="font-family: 'Poppins', sans-serif; color: #4A90E2; font-weight: bold;">
+    🛠️ Admin Paneli
+</h2>
+
+<div class="container">
+    <!-- Alerts for Success and Error Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- User Table -->
+    <div class="table-responsive">
+        <table class="table table-hover align-middle shadow-sm">
+            <thead class="table-primary">
+                <tr>
+                    <th>Ad</th>
+                    <th>Soyad</th>
+                    <th>Doğum Tarihi</th>
+                    <th>Cinsiyet</th>
+                    <th>Telefon Numarası</th>
+                    <th>Konum</th>
+                    <th>Profil Fotoğrafı</th>
+                    <th>Aksiyonlar</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td>@user.FirstName</td>
+                        <td>@user.LastName</td>
+                        <td>@user.BirthDate.ToShortDateString()</td>
+                        <td>@user.Gender</td>
+                        <td>@user.PhoneNumber</td>
+                        <td>@user.Konum</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(user.ProfilePicture))
+                            {
+                                <img src="@user.ProfilePicture" alt="Profil Fotoğrafı" class="rounded-circle" style="width: 50px; height: 50px;" />
+                            }
+                            else
+                            {
+                                <span class="text-muted">No picture</span>
+                            }
+                        </td>
+                        <td>
+                            <form method="post" action="@Url.Action("DeleteUser", "Admin")" class="d-inline">
+                                <input type="hidden" name="userId" value="@user.Id" />
+                                <button type="submit" class="btn btn-sm btn-danger">Sil</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="d-flex justify-content-around mt-4">
+        <a asp-action="PendingEvents" asp-controller="Admin" class="btn btn-outline-success">Onaylanacak Etkinlikler</a>
+        <a asp-action="Events" asp-controller="Admin" class="btn btn-outline-primary">Tüm Etkinlikler</a>
+        <a asp-action="Categories" asp-controller="Admin" class="btn btn-outline-warning">Kategori İşlemleri</a>
+        <a asp-action="Report" asp-controller="Admin" class="btn btn-outline-info">Rapor</a>
+        <a asp-action="FeedbackNotifications" asp-controller="Admin" class="btn btn-outline-info">Bildirim</a>
+
+    </div>
 </div>
-<!-- Tüm Etkinlikler Butonu -->
-<div class="mb-3">
-    <a asp-action="Events" asp-controller="Admin" class="btn btn-primary">Tüm Etkinliklerim</a>
-</div>
+
+<!-- Include Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>

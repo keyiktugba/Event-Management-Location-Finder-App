@@ -1,0 +1,177 @@
+﻿@model Tuple<IEnumerable<Yazlab_2.Models.EntityBase.Kategori>, Yazlab_2.Models.EntityBase.Kategori>
+
+@{
+    Layout = "_Layout";
+}
+
+<h2 class="text-center mb-4 text-su-yesili" style="font-family: 'Poppins', sans-serif; font-weight: 600;">Kategori Yönetimi</h2>
+
+<!-- Success and Error Message Alerts -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+
+<div class="row">
+    <!-- Kategori Ekleme Formu -->
+    <div class="col-md-6 mb-4">
+        <h3 class="text-center text-su-yesili" style="font-family: 'Poppins', sans-serif;">Yeni Kategori Ekle</h3>
+        <form asp-action="AddCategory" method="post">
+            <div class="form-group">
+                <label for="AddCategoryName">Kategori Adı</label>
+                <input type="text" id="AddCategoryName" name="CategoryName" class="form-control" required placeholder="Kategori adını girin" />
+            </div>
+            <button type="submit" class="btn btn-su-yesili btn-block">Ekle</button>
+        </form>
+    </div>
+
+    <!-- Kategori Güncelleme Formu -->
+    <div class="col-md-6 mb-4">
+        <h3 class="text-center text-warning" style="font-family: 'Poppins', sans-serif;">Kategori Güncelle</h3>
+        <form asp-action="UpdateCategory" method="post">
+            <div class="form-group">
+                <label for="UpdateCategoryID">Kategori Seç</label>
+                <select id="UpdateCategoryID" name="CategoryID" class="form-control" required>
+                    <option value="">Kategori Seçiniz</option>
+                    @foreach (var kategori in Model.Item1)
+                    {
+                        <option value="@kategori.CategoryID">@kategori.CategoryName</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="UpdateCategoryName">Yeni Kategori Adı</label>
+                <input type="text" id="UpdateCategoryName" name="CategoryName" class="form-control" required placeholder="Yeni kategori adını girin" />
+            </div>
+            <button type="submit" class="btn btn-su-yesili btn-block">Güncelle</button>
+        </form>
+    </div>
+</div>
+
+<!-- Kategori Listesi -->
+<div class="row mt-5">
+    <div class="col-md-12">
+        <h3 class="text-center text-su-yesili" style="font-family: 'Poppins', sans-serif;">Mevcut Kategoriler</h3>
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Kategori Adı</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var kategori in Model.Item1)
+                {
+                    <tr>
+                        <td>@kategori.CategoryID</td>
+                        <td>@kategori.CategoryName</td>
+                        <td>
+                            <form asp-action="DeleteCategory" method="post" style="display:inline;">
+                                <input type="hidden" name="id" value="@kategori.CategoryID" />
+                                <button type="submit" class="btn btn-danger btn-sm">Sil</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modern CSS Styles -->
+<style>
+    /* Genel Sayfa Yazı Tipi */
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #f5f5f5;
+    }
+
+    h2, h3 {
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    /* Alert Box'lar */
+    .alert {
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Formlar */
+    .form-control {
+        border-radius: 6px;
+        padding: 10px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+    }
+
+        .form-control:focus {
+            border-color: #66afe9;
+            box-shadow: 0 0 8px rgba(102, 175, 233, 0.6);
+        }
+
+    /* Butonlar */
+    .btn {
+        border-radius: 6px;
+        padding: 10px 20px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .btn-su-yesili {
+        background-color: #1a6b5c; /* Su yeşili rengi */
+        border-color: #1a6b5c;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+
+    /* Tablo Stilleri */
+    .table {
+        background-color: #fff;
+        border-radius: 6px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+        .table th, .table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+    .table-striped tbody tr:nth-child(odd) {
+        background-color: #f9f9f9;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #e9ecef;
+        cursor: pointer;
+    }
+
+    /* Genel Margin ve Padding Ayarları */
+    .row {
+        margin: 0 auto;
+        max-width: 1200px;
+    }
+</style>

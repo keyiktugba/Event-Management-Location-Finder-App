@@ -19,8 +19,18 @@ builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfi
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddSingleton<EmailService>();
-// Program.cs veya Startup.cs (ConfigureServices metodu)
+builder.Services.AddScoped<NotificationService>();
 
+// Session için gerekli servis eklemeleri
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Oturumun zaman aþýmý
+    options.Cookie.HttpOnly = true; // Güvenlik için
+    options.Cookie.IsEssential = true; // Çerez kullanýmýný gerekli yap
+});
+
+// IHttpContextAccessor servisinin eklenmesi (Session için gerekebilir)
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
@@ -30,9 +40,9 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
-
 }
 
+// Rol kontrolü için gerekli kod
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -51,6 +61,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+// Session middleware'i ekleniyor
+app.UseSession();
 
 app.UseAuthorization();
 

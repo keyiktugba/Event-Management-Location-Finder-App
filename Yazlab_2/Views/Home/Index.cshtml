@@ -2,7 +2,193 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<style>
+    /* Arka plan rengi ve sayfa stili */
+    body {
+        background-image: url('/images/Adsız tasarım.png'); /* Arka plan resmi */
+        background-size: cover; /* Arka planı tüm ekranı kaplayacak şekilde ayarlar */
+        background-repeat: no-repeat; /* Resmin tekrarlanmamasını sağlar */
+        background-position: center; /* Resmin ortalanmasını sağlar */
+        font-family: 'Arial', sans-serif;
+        color: #333;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Hoşgeldiniz kutusu */
+    .welcome-container {
+        margin-top: 10%; /* Yukarıdan daha az boşluk */
+        text-align: center;
+        padding: 30px;
+        background-color: rgba(255, 255, 255, 0.8); /* Hafif saydam arka plan */
+        border-radius: 20px; /* Kenarları daha da yuvarlatma */
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Daha belirgin gölgeleme */
+        width: 50%; /* Daha dar bir genişlik */
+        margin-left: auto; /* Ortalamak için */
+        margin-right: auto; /* Ortalamak için */
+        transition: transform 0.3s ease-in-out; /* Hafif animasyon */
+    }
+
+        /* Hoşgeldiniz kutusuna hover efekti */
+        .welcome-container:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Başlık stili */
+        .welcome-container h1 {
+            font-size: 4rem; /* Daha büyük başlık */
+            color: #1e8449; /* Koyu yeşil başlık rengi */
+            font-family: 'Georgia', serif;
+            font-weight: bold;
+            margin-bottom: 25px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3); /* Daha belirgin gölgeleme */
+        }
+
+    /* Buton stili */
+    .btn-custom {
+        background-color: #00b894; /* Su yeşili buton */
+        color: #1e8449; /* Koyu yeşil yazı rengi */
+        padding: 12px 24px;
+        border-radius: 8px; /* Daha yuvarlak köşe */
+        font-size: 1.5rem; /* Daha büyük yazı */
+        text-decoration: none;
+        display: inline-block;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Hafif gölge */
+        transition: all 0.3s ease-in-out;
+    }
+
+
+        /* Buton hover efekti */
+        .btn-custom:hover {
+            background-color: #00a682; /* Su yeşili tonunda koyulaşma */
+            color: #1e8449; /* Daha koyu yeşil yazı rengi */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Buton aktif durumu */
+        .btn-custom:active {
+            transform: translateY(1px);
+        }
+
+    /* Modal için stil */
+    .modal {
+        display: none; /* Başlangıçta gizli */
+        position: fixed; /* Ekranın ortasında yer alacak */
+        z-index: 1; /* En üstte olacak */
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); /* Arka planı siyah yapıp şeffaflık veriyoruz */
+    }
+
+    /* Modal içeriği */
+    .modal-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%); /* Ekranın ortasına yerleştiriyoruz */
+        background-color: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Çarpı butonunun stilini ayarlıyoruz */
+    .close {
+        color: #aaa;
+        font-size: 28px;
+        font-weight: bold;
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        cursor: pointer;
+    }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+    /* Video kutusunun stilini de buraya ekleyebiliriz */
+    video {
+        width: 80%; /* Videoyu %80 genişliğinde yapıyoruz, ihtiyaç halinde bu değeri değiştirebilirsiniz */
+        height: auto; /* Yüksekliği orantılı olarak ayarlıyor */
+        border-radius: 10px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        display: block;
+        margin: 0 auto; /* Ortalamak için */
+    }
+</style>
+
+<div class="welcome-container">
+    <h1>Hoşgeldiniz</h1>
+
+    <!-- Giriş Yap Butonu -->
+    <div>
+        <a asp-controller="Account" asp-action="Login" class="btn-custom">Giriş Yap</a>
+    </div>
 </div>
+
+<!-- Tanıtım Videosu için Modal -->
+<div class="container mt-4">
+    <!-- Modal Yapısı -->
+    <div id="videoModal" class="modal">
+        <div class="modal-content">
+            <span id="closeModal" class="close">&times;</span>
+            <video id="videoPlayer" controls autoplay>
+                <source src="/videos/Adsız tasarım.mp4" type="video/mp4">
+                Tarayıcınız bu videoyu desteklemiyor.
+            </video>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Sayfa adını kontrol et
+    var pageName = window.location.pathname;
+
+    // Sayfa yüklendiğinde videoyu ve sesini kontrol et
+    window.onload = function () {
+        var video = document.getElementById("videoPlayer");
+
+        if (video) {
+            // Sadece Home sayfasında video sesini aç, diğer sayfalarda kapalı tut
+            if (pageName === "/" || pageName === "/Home/Index") {
+                video.muted = false; // Videoyu sesli yap
+                var modal = document.getElementById("videoModal");
+                modal.style.display = "block"; // Modal'ı aç
+            } else {
+                video.muted = true; // Diğer sayfalarda videoyu sessize al
+                video.pause(); // Videoyu durdur
+                video.currentTime = 0; // Videonun başına al
+            }
+        }
+    };
+
+    // Çarpıya basıldığında modal'ı kapatan ve videoyu durduran fonksiyon
+    var closeModal = document.getElementById("closeModal");
+    closeModal.onclick = function () {
+        var modal = document.getElementById("videoModal");
+        var video = document.getElementById("videoPlayer");
+        modal.style.display = "none"; // Modal'ı kapat
+        video.pause(); // Videoyu durdur
+        video.currentTime = 0; // Videonun başına al
+        video.muted = true; // Videoyu sessize al
+    };
+
+    // Modal dışında bir yere tıklanırsa da modal'ı kapat ve videoyu durdur
+    window.onclick = function (event) {
+        var modal = document.getElementById("videoModal");
+        var video = document.getElementById("videoPlayer");
+        if (event.target == modal) {
+            modal.style.display = "none"; // Modal'ı kapat
+            video.pause(); // Videoyu durdur
+            video.currentTime = 0; // Videonun başına al
+            video.muted = true; // Videoyu sessize al
+        }
+    };
+</script>

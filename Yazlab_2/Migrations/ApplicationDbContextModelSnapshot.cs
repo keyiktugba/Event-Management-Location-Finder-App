@@ -184,6 +184,10 @@ namespace Yazlab_2.Migrations
                     b.Property<int>("EtkinlikSuresi")
                         .HasColumnType("int");
 
+                    b.Property<string>("Foto")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsApproved")
                         .HasColumnType("bit");
 

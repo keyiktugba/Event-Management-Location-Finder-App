@@ -1,14 +1,24 @@
 ﻿@model Yazlab_2.Models.ViewModel.EventMessagesViewModel
 
-<h3>@Model.EventName Etkinliği Mesajları</h3>
+<h3 class="text-su-yesili">@Model.EventName Mesajlarım</h3>
 
 <div class="messages">
     @foreach (var message in Model.Messages)
     {
         <div class="message">
-            <strong>@message.Gonderici.FirstName @message.Gonderici.LastName</strong>
-            <p>@message.MesajMetni</p>
-            <small>@message.GonderimZamani.ToString("dd MMM yyyy HH:mm")</small>
+            <!-- Profil resmini ve ismi sol tarafa hizalıyoruz -->
+            <div class="message-profile">
+                <img src="@message.Gonderici.ProfilePicture" alt="Profil Resmi" class="profile-picture" />
+                <div class="message-info">
+                    <strong>@message.Gonderici.FirstName @message.Gonderici.LastName</strong>
+                    <small>@message.GonderimZamani.ToString("dd MMM yyyy HH:mm")</small>
+                </div>
+            </div>
+
+            <!-- Mesaj metnini sağ tarafa hizalıyoruz -->
+            <div class="message-content">
+                <p>@message.MesajMetni</p>
+            </div>
         </div>
     }
 </div>
@@ -17,7 +27,117 @@
 <form asp-action="SendMessage" method="post">
     <input type="hidden" name="eventId" value="@Model.EventId" />
     <div class="form-group">
-        <textarea name="message" class="form-control" required></textarea>
+        <textarea name="message" class="form-control" required placeholder="Mesajınızı buraya yazın..."></textarea>
     </div>
-    <button type="submit" class="btn btn-primary">Gönder</button>
+    <button type="submit" class="btn btn-su-yesili">Gönder</button>
 </form>
+
+<head>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* Genel mesaj kutusunun düzeni */
+        .messages {
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f1fdf7; /* Daha açık su yeşili arka plan */
+            border-radius: 10px;
+            font-family: 'Poppins', sans-serif; /* Poppins fontunu kullanıyoruz */
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #d0f0e8; /* Hafif su yeşili sınır */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Hafif gölge efekti */
+            font-family: 'Roboto', sans-serif; /* Mesajlar için Roboto fontu */
+        }
+
+        /* Profil resmi ve kullanıcı ismi düzeni */
+        .message-profile {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+
+        .profile-picture {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #56c2a3; /* Su yeşili kenarlık */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-info {
+            margin-left: 10px;
+        }
+
+            .message-info strong {
+                font-size: 1.2em;
+                color: #333;
+            }
+
+            .message-info small {
+                font-size: 0.9em;
+                color: #888;
+            }
+
+        /* Mesaj içeriği düzeni */
+        .message-content {
+            flex-grow: 1;
+            font-size: 1em;
+            line-height: 1.6;
+        }
+
+            .message-content p {
+                margin: 0;
+                padding: 12px;
+                background-color: #f1fdf7; /* Daha açık su yeşili arka plan */
+                border-radius: 8px;
+                color: #333;
+            }
+
+        /* Mesaj yazma alanı düzeni */
+        textarea.form-control {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            font-size: 1em;
+            border-radius: 8px;
+            border: 1px solid #56c2a3; /* Su yeşili sınır */
+            resize: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        button.btn-su-yesili {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #56c2a3; /* Su yeşili buton rengi */
+            border-color: #56c2a3;
+            font-size: 1em;
+            border-radius: 5px;
+            font-weight: bold;
+            color: white;
+        }
+
+            button.btn-su-yesili:hover {
+                background-color: #4ea58e; /* Hover için daha koyu su yeşili */
+                border-color: #4ea58e;
+            }
+
+        /* Başlık rengi */
+        h3, h4 {
+            color: #56c2a3; /* Başlık için su yeşili */
+            font-family: 'Poppins', sans-serif;
+        }
+    </style>
+</head>

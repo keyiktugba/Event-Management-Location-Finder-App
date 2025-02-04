@@ -10,6 +10,12 @@ namespace Yazlab_2.Models.ViewModel
         public List<int> SelectedInterests { get; set; }  // Seçilen ilgi alanlarının ID'leri
         public List<Kategori> Categories { get; set; }
         public IFormFile ProfilePicture { get; set; } // Profil fotoğrafı
+        public RecommendationViewModel Recommendations { get; set; }  // İlgi alanlarına, geçmiş etkinliklere ve konuma göre öneriler
+        public List<Etkinlik> JoinedEvents { get; set; }  // Katıldığınız etkinlikler
+        public string Konum { get; set; }
+        public int TotalPoints { get; set; }
     }
+
+
 
 }

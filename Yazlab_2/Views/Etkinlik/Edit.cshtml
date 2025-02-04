@@ -1,62 +1,285 @@
-﻿@model Yazlab_2.Models.ViewModel.EtkinlikRegisterViewModel
+﻿@model Yazlab_2.Models.ViewModel.EventEditViewModel
 
-<h2>Etkinlik Düzenle</h2>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etkinlik Düzenle</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCSc3WNHjhSATknV-Y7RX4ZhBFDJKbm868&callback=initMap" async defer></script>
 
-<form asp-action="Edit" asp-controller="Etkinlik" method="post">
-    <div class="form-group">
-        <label asp-for="EtkinlikAdi" class="control-label"></label>
-        <input asp-for="EtkinlikAdi" class="form-control" />
-        <span asp-validation-for="EtkinlikAdi" class="text-danger"></span>
+    <style>
+        #map {
+            width: 100%;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        /* Genel sayfa düzeni */
+        .container {
+            margin-top: 30px;
+            background-color: #e8f5f2; /* Su yeşili arka plan */
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Modern yazı tipi */
+        }
+
+        /* Başlık stil */
+        h2 {
+            font-size: 32px;
+            font-weight: bold;
+            color: #00b894; /* Belirtilen yeşil renk */
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        /* Hata ve başarı mesajları */
+        .alert {
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 16px;
+        }
+
+        /* Başarı mesajı */
+        .alert-success {
+            background-color: #DFF0D8;
+            border-color: #D6E9C6;
+            color: #3c763d;
+        }
+
+        /* Hata mesajı */
+        .alert-danger {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        /* Form elemanları */
+        .form-group label {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Input alanları */
+        .form-control {
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            padding: 12px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+            /* Focus durumda input alanları */
+            .form-control:focus {
+                border-color: #00b894; /* Belirtilen yeşil renk */
+                box-shadow: 0 0 5px rgba(0, 184, 148, 0.5);
+            }
+
+        /* Butonlar */
+        .btn {
+            border-radius: 50px;
+            font-weight: bold;
+            padding: 15px 30px;
+            text-transform: uppercase;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: #00b894; /* Belirtilen yeşil renk */
+            border: none;
+            color: white;
+        }
+
+            .btn-primary:hover {
+                background-color: #009c73; /* Koyu yeşil */
+                transform: translateY(-2px);
+            }
+
+        /* Fotoğraf alanı */
+        img.img-thumbnail {
+            width: 150px;
+            height: 150px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        /* Select element */
+        .select2-container--default .select2-selection--single {
+            height: 45px;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            transition: border-color 0.3s ease;
+        }
+
+            .select2-container--default .select2-selection--single:focus {
+                border-color: #00b894;
+            }
+
+        /* İleri seviye stil */
+        input[type="file"] {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background-color: #f8f9fa;
+            margin-top: 15px;
+        }
+
+            input[type="file"]:focus {
+                border-color: #00b894;
+            }
+    </style>
+
+    <script>
+        let map, marker;
+
+        function initMap() {
+            // Varsayılan başlangıç konumu (İstanbul)
+            const initialLocation = { lat: 41.0082, lng: 28.9784 };
+
+            // Google Maps haritasını başlat
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: initialLocation,
+                zoom: 8,
+            });
+
+            // İşaretçi oluştur
+            marker = new google.maps.Marker({
+                position: initialLocation,
+                map: map,
+                draggable: true,
+            });
+
+            // Marker hareket ettiğinde konum alanını güncelle
+            marker.addListener("dragend", () => {
+                const position = marker.getPosition();
+                document.getElementById("konum").value =
+                    position.lat().toFixed(6) + ", " + position.lng().toFixed(6);
+            });
+
+            // Mevcut konumu haritada ayarla (Eğer varsa)
+            const konumInput = document.getElementById("konum").value;
+            if (konumInput) {
+                const [lat, lng] = konumInput.split(",").map(Number);
+                const userLocation = { lat, lng };
+                marker.setPosition(userLocation);
+                map.setCenter(userLocation);
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <div class="container">
+        <h2 class="text-center mb-4" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">🎉 Etkinlik Düzenle 🎉</h2>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["SuccessMessage"]
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        }
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger">
+                <strong>Hata:</strong> Lütfen tüm alanları doğru şekilde doldurduğunuzdan emin olun.
+            </div>
+        }
+
+        <form asp-action="Edit" asp-controller="Etkinlik" method="post" enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="form-group">
+                        <label asp-for="EtkinlikAdi" class="control-label">Etkinlik Adı</label>
+                        <input asp-for="EtkinlikAdi" class="form-control" placeholder="Etkinlik adını girin" />
+                        <span asp-validation-for="EtkinlikAdi" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="form-group">
+                        <label asp-for="Tarih" class="control-label">Tarih</label>
+                        <input asp-for="Tarih" type="date" class="form-control" />
+                        <span asp-validation-for="Tarih" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="form-group">
+                        <label asp-for="Saat" class="control-label">Saat</label>
+                        <input asp-for="Saat" type="time" class="form-control" />
+                        <span asp-validation-for="Saat" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Aciklama" class="control-label">Açıklama</label>
+                <textarea asp-for="Aciklama" class="form-control" placeholder="Etkinlik açıklamasını yazın">@Model.Aciklama</textarea>
+                <span asp-validation-for="Aciklama" class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="form-group">
+                        <label asp-for="EtkinlikSuresi" class="control-label">Etkinlik Süresi (saat)</label>
+                        <input asp-for="EtkinlikSuresi" type="number" class="form-control" placeholder="Ör: 3" />
+                        <span asp-validation-for="EtkinlikSuresi" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="form-group">
+                        <label>Konum</label>
+                        <div id="map"></div>
+                        <input id="konum" asp-for="Konum" class="form-control" placeholder="Haritadan konum seçin" readonly />
+                        <span asp-validation-for="Konum" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="CategoryID" class="control-label">Kategori</label>
+                <select asp-for="CategoryID" class="form-control" asp-items="@(ViewData["CategoryList"] as SelectList)">
+                    <option value="">Kategori Seçin</option>
+                </select>
+                <span asp-validation-for="CategoryID" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label>Mevcut Etkinlik Fotoğrafı</label><br />
+                @if (!string.IsNullOrEmpty(Model.ExistingPicturePath))
+                {
+                    <img src="@Url.Content(Model.ExistingPicturePath)" alt="Etkinlik Fotoğrafı" class="img-thumbnail" />
+                }
+                else
+                {
+                    <img src="/images/default-event.png" alt="Varsayılan Fotoğraf" class="img-thumbnail" />
+                }
+            </div>
+
+            <div class="form-group">
+                <label for="EventPicture">Yeni Etkinlik Fotoğrafı</label>
+                <input type="file" class="form-control" id="EventPicture" name="EventPicture" />
+                <small class="text-muted">Yeni fotoğraf yüklemek isterseniz seçin, aksi takdirde mevcut fotoğraf korunacaktır.</small>
+            </div>
+
+            <input type="hidden" asp-for="ExistingPicturePath" value="@Model.ExistingPicturePath" />
+            <input type="hidden" asp-for="UserID" />
+            <input type="hidden" asp-for="EtkinlikID" />
+
+            <button type="submit" class="btn btn-primary btn-lg btn-block">Etkinlik Güncelle</button>
+        </form>
     </div>
 
-    <div class="form-group">
-        <label asp-for="Aciklama" class="control-label"></label>
-        <textarea asp-for="Aciklama" class="form-control"></textarea>
-    </div>
-
-    <div class="form-group">
-        <label asp-for="Tarih" class="control-label"></label>
-        <input asp-for="Tarih" class="form-control" />
-        <span asp-validation-for="Tarih" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
-        <label asp-for="Saat" class="control-label"></label>
-        <input asp-for="Saat" class="form-control" />
-        <span asp-validation-for="Saat" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
-        <label asp-for="EtkinlikSuresi" class="control-label"></label>
-        <input asp-for="EtkinlikSuresi" class="form-control" />
-    </div>
-
-    <div class="form-group">
-        <label asp-for="Konum" class="control-label"></label>
-        <input asp-for="Konum" class="form-control" />
-        <span asp-validation-for="Konum" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
-        <label for="CategoryID">Kategori</label>
-        <select asp-for="CategoryID" class="form-control" asp-items="@(ViewData["CategoryList"] as SelectList)">
-            <option value="">Kategori Seçin</option>
-        </select>
-    </div>
-
-    <!-- Gizli UserID alanı -->
-    <input type="hidden" asp-for="UserID" />
-    <input type="hidden" asp-for="EtkinlikID" />
-    <button type="submit" class="btn btn-primary">Etkinlik Güncelle</button>
-</form>
-
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-}
-
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
-}
+</body>
+</html>

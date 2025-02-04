@@ -4,21 +4,103 @@
     ViewData["Title"] = "Login";
 }
 
-<h2>Giriş Yap</h2>
+<style>
+    /* Su Yeşili Tema - Login Sayfası */
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #f0fdf4; 
+        margin: 0;
+        padding: 0;
+    }
 
-<form asp-action="Login" method="post">
-    <div class="form-group">
-        <label for="Username">Kullanıcı Adı</label>
-        <input type="text" class="form-control" id="Username" name="Username" value="@Model.Username" required />
-    </div>
-    <div class="form-group">
-        <label for="Password">Şifre</label>
-        <input type="password" class="form-control" id="Password" name="Password" required />
-    </div>
-    <button type="submit" class="btn btn-primary">Giriş Yap</button>
-</form>
+    .login-container {
+        max-width: 400px;
+        margin: 10% auto;
+        padding: 30px;
+        background-color: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        text-align: center;
+    }
 
-<div>
-    <p>Hesabınız yok mu? <a href="/Account/Register">Kayıt Olun</a></p>
-    <p><a href="/Account/ForgotPassword">Şifremi Unuttum</a></p>
+        /* Başlık stili */
+        .login-container h2 {
+            color: #56c2a3; /* Su Yeşili Başlık */
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+    /* Form etiketleri */
+    .form-group label {
+        font-weight: bold;
+        color: #56c2a3; /* Su Yeşili Etiket Rengi */
+        text-align: left;
+    }
+
+    /* Form input alanları */
+    .form-control {
+        border: 1px solid #56c2a3;
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 20px;
+        font-size: 1rem;
+    }
+
+    /* Buton stili */
+    .btn-su-yesili {
+        background-color: #56c2a3; /* Su Yeşili Buton */
+        color: #ffffff;
+        padding: 12px 20px;
+        width: 100%;
+        border-radius: 5px;
+        border: none;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+        /* Buton hover efekti */
+        .btn-su-yesili:hover {
+            background-color: #45a791; /* Koyu Su Yeşili Hover */
+        }
+
+    /* Bağlantı linkleri */
+    .links {
+        margin-top: 20px;
+    }
+
+        /* Bağlantı stil */
+        .links a {
+            text-decoration: none;
+            color: #56c2a3; /* Su Yeşili Bağlantı Rengi */
+        }
+
+            /* Bağlantı hover efekti */
+            .links a:hover {
+                text-decoration: underline;
+            }
+
+    /* Su yeşili tonunda metin sınıfı */
+    .text-su-yesili {
+        color: #56c2a3; /* Su Yeşili */
+    }
+</style>
+
+<div class="login-container">
+    <h2>Giriş Yap</h2>
+    <form asp-action="Login" method="post">
+        <div class="form-group">
+            <label for="Username">Kullanıcı Adı</label>
+            <input type="text" class="form-control" id="Username" name="Username" value="@Model.Username" required />
+        </div>
+        <div class="form-group">
+            <label for="Password">Şifre</label>
+            <input type="password" class="form-control" id="Password" name="Password" required />
+        </div>
+        <button type="submit" class="btn-su-yesili">Giriş Yap</button>
+    </form>
+    <div class="links">
+        <p>Hesabınız yok mu? <a href="/Account/Register" class="text-su-yesili">Kayıt Olun</a></p>
+        <p><a href="/Account/ForgotPassword" class="text-su-yesili">Şifremi Unuttum</a></p>
+    </div>
 </div>

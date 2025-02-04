@@ -3,48 +3,69 @@
     ViewBag.Title = "Tüm Etkinlikler";
 }
 
-<h2>Tüm Etkinlikler</h2>
+<h2 class="text-center mb-4 text-primary" style="font-family: 'Arial', sans-serif;">📅 Tüm Etkinlikler 📅</h2>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Etkinlik Adı</th>
-            <th>Açıklama</th>
-            <th>Kategori</th>
-            <th>Oluşturan Kullanıcı</th>
-            <th>Tarih</th>
-            <th>Onay Durumu</th>
-            <th>İşlemler</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var etkinlik in Model)
-        {
-            <tr>
-                <td>@etkinlik.EtkinlikAdi</td>
-                <td>@etkinlik.Aciklama</td>
-                <td>@etkinlik.Category?.CategoryName</td>
-                <td>@etkinlik.User?.UserName</td>
-                <td>@etkinlik.Tarih.ToShortDateString()</td>
-                <td>@(etkinlik.IsApproved ? "Onaylı" : "Onaysız")</td>
-                <td>
-                    <form asp-action="DeleteEvent" asp-controller="Admin" method="post" style="display:inline;">
-                        <input type="hidden" name="id" value="@etkinlik.ID" />
-                        <button type="submit" class="btn btn-danger" onclick="return confirm('Bu etkinliği silmek istediğinize emin misiniz?');">
-                            Sil
-                        </button>
-                    </form>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
 
+<!-- Success and Error Message Alerts -->
 @if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert" style="background-color: #DFF0D8; border-color: #D6E9C6;">
+        @TempData["SuccessMessage"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
 }
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" style="background-color: #F2DEDE; border-color: #EBCCBC;">
+        @TempData["ErrorMessage"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
 }
+
+<div class="table-responsive mt-4">
+    <table class="table table-bordered table-striped">
+        <thead class="thead-light" style="background-color: #FFFBF0;">
+            <tr>
+                <th>Etkinlik Adı</th>
+                <th>Açıklama</th>
+                <th>Kategori</th>
+                <th>Oluşturan Kullanıcı</th>
+                <th>Tarih</th>
+                <th>Onay Durumu</th>
+                <th>İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var etkinlik in Model)
+            {
+                <tr style="background-color: #FFFBF0;">
+                    <td>@etkinlik.EtkinlikAdi</td>
+                    <td>@etkinlik.Aciklama</td>
+                    <td>@etkinlik.Category?.CategoryName</td>
+                    <td>@etkinlik.User?.UserName</td>
+                    <td>@etkinlik.Tarih.ToShortDateString()</td>
+                    <td>@(etkinlik.IsApproved ? "Onaylı" : "Onaysız")</td>
+                    <td class="d-flex justify-content-start">
+                        <!-- Mesajlar Butonu -->
+                        <a href="@Url.Action("EventMessages", "Admin", new { id = etkinlik.ID })" class="btn btn-info btn-sm" style="margin-right: 5px;">📩 Mesajlar</a>
+
+                        <!-- Düzenle Butonu -->
+                        <a href="@Url.Action("Edit", "Etkinlik", new { id = etkinlik.ID })" class="btn btn-warning btn-sm" style="margin-right: 5px;">✏ Düzenle</a>
+
+                        <!-- Silme Butonu -->
+                        <form asp-action="DeleteEvent" asp-controller="Admin" method="post" style="display:inline;">
+                            <input type="hidden" name="id" value="@etkinlik.ID" />
+                            <button type="submit" class="btn btn-danger btn-sm" style="background-color: #DC3545; border-color: #DC3545;" onclick="return confirm('Bu etkinliği silmek istediğinize emin misiniz?');">
+                                ❌ Sil
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,22 +1,143 @@
 ﻿@model List<Yazlab_2.Models.EntityBase.Etkinlik>
 
-<h3>Katıldığınız Etkinlikler</h3>
-<div class="row">
+<h3 class="text-center my-4 text-su-yesili" style="font-family: 'Poppins', sans-serif; font-weight: 600;">Katıldığınız Etkinlikler</h3>
+
+<div class="row justify-content-center">
     @foreach (var etkinlik in Model)
     {
-        <div class="col-md-4 mb-4">
-            <div class="card shadow-sm h-100">
+        <div class="col-sm-6 col-md-4 mb-4">
+            <div class="card shadow-lg h-100 border-light border-0 event-card">
+                <img src="@(etkinlik.Foto ?? "/images/default-event.png")" class="card-img-top" alt="@etkinlik.EtkinlikAdi" />
                 <div class="card-body">
-                    <h5 class="card-title">@etkinlik.EtkinlikAdi</h5>
-                    <p class="card-text">@etkinlik.Aciklama</p>
+                    <h5 class="card-title text-su-yesili" style="font-weight: 600;">@etkinlik.EtkinlikAdi</h5>
+                    <p class="card-text text-muted" style="font-family: 'Poppins', sans-serif;">@etkinlik.Aciklama</p>
                     <p class="card-text">
-                        <small class="text-muted">
+                        <small class="text-muted" style="font-family: 'Poppins', sans-serif;">
                             @etkinlik.Tarih.ToString("dd MMM yyyy") - @etkinlik.Saat.ToString(@"hh\:mm")
                         </small>
                     </p>
-                    <a href="@Url.Action("Messages", "User", new { eventId = etkinlik.ID })" class="btn btn-info">Mesajlar</a>
+                    <a href="@Url.Action("Messages", "User", new { eventId = etkinlik.ID })" class="btn btn-su-yesili event-btn text-white">Mesajlar</a>
+
+                    <!-- Leave Event Form -->
+                    <form method="post" action="@Url.Action("LeaveEvent", "User")" class="mt-2">
+                        <input type="hidden" name="eventId" value="@etkinlik.ID" />
+                        <button type="submit" class="btn btn-danger event-btn">Etkinlikten Çık</button>
+                        <a href="@Url.Action("Harita", "User", new { eventId = etkinlik.ID })" class="btn btn-su-yesili event-btn">Detaylar</a>
+                    </form>
                 </div>
             </div>
         </div>
     }
 </div>
+
+<style>
+    /* Sayfa genel arka plan */
+    body {
+        background-color: #f4f8f4; /* Hafif gri-yeşil ton */
+        font-family: 'Poppins', sans-serif;
+    }
+
+    /* Kart tasarımı */
+    .event-card {
+        transition: transform 0.3s, box-shadow 0.3s;
+        border-radius: 15px;
+        overflow: hidden;
+        background-color: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        max-width: 100%; /* Kart boyutunu genişlet */
+        height: 100%;
+    }
+
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+        }
+
+    /* Kart başlıkları için stil */
+    .card-title {
+        color: #56c2a3; /* Su yeşili */
+        font-weight: bold;
+        font-size: 1.25rem;
+        margin-bottom: 10px;
+    }
+
+    /* Kart içeriği için metin */
+    .card-text {
+        color: #6c757d; /* Gri ton */
+        font-size: 1rem;
+        margin-bottom: 15px;
+    }
+
+    /* Butonlar için renkler */
+    .event-btn {
+        border-radius: 25px;
+        padding: 10px 20px;
+        font-weight: bold;
+        font-size: 0.95rem;
+        transition: background-color 0.3s, opacity 0.3s;
+    }
+
+        .event-btn:hover {
+            opacity: 0.9;
+        }
+
+    /* Mesajlar butonu için metin rengi */
+    .btn-su-yesili {
+        background-color: #56c2a3; /* Su yeşili */
+        border: none;
+    }
+
+        .btn-su-yesili:hover {
+            background-color: #4ea58e;
+        }
+
+    /* Kırmızı buton */
+    .btn-danger {
+        background-color: #dc3545; /* Kırmızı */
+        border: none;
+    }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+    /* Detaylar butonu için mavi */
+    .btn-primary {
+        background-color: #007bff; /* Mavi */
+        border: none;
+    }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+    /* Başlık için su yeşili renk */
+    .text-su-yesili {
+        color: #56c2a3;
+    }
+
+    /* Responsive kart düzeni */
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px; /* Kartlar arasında boşluk */
+    }
+
+    /* Kartların genişliği ve hizalanması */
+    .col-sm-6, .col-md-4 {
+        flex: 1 0 30%; /* Kartlar arasındaki boşlukları ayarlama */
+    }
+
+    /* Kart margin */
+    .col-md-4 {
+        margin-bottom: 30px;
+    }
+
+    /* Kart boyutlandırma */
+    .event-card img {
+        height: 200px; /* Kart resim boyutunu küçültme */
+        object-fit: cover; /* Resmi kutuya sığdırma */
+    }
+
+</style>

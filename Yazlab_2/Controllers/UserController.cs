@@ -9,6 +9,8 @@ using Yazlab_2.Data;
 using Yazlab_2.Models.EntityBase;
 using Yazlab_2.Models.ViewModel;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using Newtonsoft.Json;
 
 namespace Yazlab_2.Controllers
 {
@@ -18,15 +20,45 @@ namespace Yazlab_2.Controllers
         private readonly SignInManager<User> _signInManager;
         private readonly ApplicationDbContext _context;
         public virtual ICollection<Notification> Notifications { get; set; }
-        public UserController(ApplicationDbContext context, UserManager<User> userManager, SignInManager<User> signInManager)
+
+        private readonly NotificationService _notificationService;
+        public UserController(ApplicationDbContext context, UserManager<User> userManager, SignInManager<User> signInManager, NotificationService notificationService)
         {
             _context = context;
             _userManager = userManager;
             _signInManager = signInManager;
+            _notificationService = notificationService;
+        }
+        [HttpGet]
+        [Authorize(Roles = "User")]
+        public async Task<IActionResult> ProfileDetails()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound("Kullanıcı bulunamadı.");
+            }
+
+            var interests = await _context.Ilgiler
+                .Where(i => i.ID == userId)
+                .Include(i => i.Category)
+                .ToListAsync();
+
+            var viewModel = new ProfileViewModel
+            {
+                User = user,
+                Interests = interests
+            };
+
+            return View(viewModel);
         }
 
-
-        // Profil Görüntüleme İşlemi
         [HttpGet]
         [Authorize(Roles = "User")]
         public async Task<IActionResult> Profile()
@@ -43,125 +75,289 @@ namespace Yazlab_2.Controllers
                 return NotFound("Kullanıcı bulunamadı.");
             }
 
-            // Kullanıcının etkinliklerini alıyoruz (Onaylanmış etkinlikler)
             var approvedEvents = await _context.Etkinlikler
-                .Where(e => e.IsApproved == true)
+                .Where(e => e.IsApproved == true) 
                 .ToListAsync();
 
-            // Kullanıcının ilgi alanlarını alıyoruz
+            var totalPoints = await _context.Puanlar
+                .Where(p => p.KullaniciID == userId)
+                .SumAsync(p => p.Puanlar);
+
+
             var interests = await _context.Ilgiler
-                .Where(i => i.ID == userId)   // Kullanıcıya ait ilgi alanları
-                .Include(i => i.Category)     // İlgili kategoriler de dahil ediliyor
+                .Where(i => i.ID == userId)
+                .Include(i => i.Category)
                 .ToListAsync();
 
-            var viewModel = new ProfileViewModel
+         
+            var joinedEventIds = await _context.Katilimcilar
+                .Where(k => k.KullaniciID == userId)
+                .Select(k => k.EtkinlikID)
+                .ToListAsync();
+
+  
+            var userInterests = interests.Select(i => i.CategoryID).ToList();
+
+            var interestRecommendations = await _context.Etkinlikler
+                .Where(e => userInterests.Contains(e.CategoryID) &&
+                            e.Tarih >= DateTime.Now &&
+                            e.IsApproved == true &&  
+                            !joinedEventIds.Contains(e.ID))
+                .ToListAsync();
+
+       
+            var pastEventCategories = await _context.Katilimcilar
+                .Where(k => k.KullaniciID == userId)
+                .Include(k => k.Etkinlik)
+                .Select(k => k.Etkinlik.CategoryID)
+                .Distinct()
+                .ToListAsync();
+
+            var pastEventRecommendations = await _context.Etkinlikler
+                .Where(e => pastEventCategories.Contains(e.CategoryID) &&
+                            e.Tarih >= DateTime.Now &&
+                            e.IsApproved == true &&  
+                            !joinedEventIds.Contains(e.ID))
+                .ToListAsync();
+
+     
+            var userLocation = await _context.Users
+                .Where(u => u.Id == userId)
+                .Select(u => u.Konum)
+                .FirstOrDefaultAsync();
+
+            if (string.IsNullOrEmpty(userLocation))
+            {
+                return BadRequest("Kullanıcının konum bilgisi mevcut değil.");
+            }
+
+            var userCoordinates = ParseCoordinates(userLocation);
+
+            var etkinlikler = await _context.Etkinlikler
+                .Where(e => e.Tarih >= DateTime.Now &&
+                            e.IsApproved == true &&  
+                            !joinedEventIds.Contains(e.ID))
+                .ToListAsync();
+
+           
+            var locationRecommendations = etkinlikler
+                .Where(e =>
+                {
+                    var eventCoordinates = ParseCoordinates(e.Konum);
+                    var distance = CalculateDistance(
+                        userCoordinates.Latitude,
+                        userCoordinates.Longitude,
+                        eventCoordinates.Latitude,
+                        eventCoordinates.Longitude
+                    );
+                    return distance <= 20; 
+                })
+                .ToList();
+
+           
+            var model = new ProfileViewModel
             {
                 User = user,
-                Events = approvedEvents,
-                Interests = interests // İlgi alanlarını view model'e ekliyoruz
+                Events = approvedEvents,  
+                Interests = interests,
+                TotalPoints = totalPoints,
+                Recommendations = new RecommendationViewModel
+                {
+                    InterestBased = interestRecommendations,
+                    PastEventBased = pastEventRecommendations,
+                    LocationBased = locationRecommendations
+                }
             };
 
-            return View(viewModel);
+            return View(model);
         }
 
-        // Kullanıcının kendi oluşturduğu etkinlikleri listeleme (Sadece onaylanmış etkinlikler gösteriliyor)
+        public IActionResult Harita(int eventId)
+        {
+            var etkinlik = _context.Etkinlikler
+                                   .FirstOrDefault(e => e.ID == eventId);
+
+            if (etkinlik == null)
+            {
+                return NotFound();
+            }
+
+        
+            var etkinlikKonum = etkinlik.Konum;  
+            var currentUserId = _userManager.GetUserId(User);
+
+            var kullaniciKonum = (from katilimci in _context.Katilimcilar
+                                  join user in _context.Users
+                                  on katilimci.KullaniciID equals user.Id
+                                  where katilimci.EtkinlikID == eventId && katilimci.KullaniciID == currentUserId
+                                  select user.Konum).FirstOrDefault();
+
+            if (string.IsNullOrEmpty(kullaniciKonum))
+            {
+                kullaniciKonum = "0,0"; 
+            }
+
+            var haritaViewModel = new HaritaViewModel
+            {
+                EtkinlikAdi = etkinlik.EtkinlikAdi,
+                Aciklama = etkinlik.Aciklama,
+                EtkinlikKonum = etkinlikKonum,
+                KullaniciKonum = kullaniciKonum,
+                Foto = etkinlik.Foto,
+                Tarih = etkinlik.Tarih, 
+                Saat = etkinlik.Saat, 
+                EtkinlikSuresi = etkinlik.EtkinlikSuresi 
+            };
+
+
+            return View(haritaViewModel);
+        }
+
         [HttpGet]
         [Authorize(Roles = "User")]
         public IActionResult MyEvents()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            // Kullanıcının oluşturduğu ve onaylanmış etkinlikleri filtreliyoruz
             var userEvents = _context.Etkinlikler
                 .Where(e => e.UserID == userId && e.IsApproved == true)
                 .ToList();
 
             return View(userEvents);
         }
+        [HttpPost]
+        [Authorize(Roles = "User")]
+        public async Task<IActionResult> LeaveEvent(int eventId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        /*   [HttpPost]
-           [Authorize(Roles = "User")]
-           public async Task<IActionResult> Profile(User model)
-           {
-               if (ModelState.IsValid)
-               {
-                   var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                   var user = await _userManager.FindByIdAsync(userId);
+            var participant = await _context.Katilimcilar
+                .FirstOrDefaultAsync(k => k.KullaniciID == userId && k.EtkinlikID == eventId);
 
-                   if (user != null)
-                   {
-                       // Kullanıcı bilgilerini güncelliyoruz
-                       user.FirstName = model.FirstName;
-                       user.LastName = model.LastName;
-                       user.Email = model.Email;
-                       user.BirthDate = model.BirthDate;
-                       user.Gender = model.Gender;
-                       user.PhoneNumber = model.PhoneNumber;
-                       user.Konum = model.Konum;
+            if (participant == null)
+            {
+                ViewBag.ErrorMessage = "Etkinliğe katılmadınız!";
+                return RedirectToAction("Profile");
+            }
 
-                       // Profil fotoğrafı güncelleniyor
-                       if (model.ProfilePicture != null)
-                       {
-                           user.ProfilePicture = model.ProfilePicture;  // Fotoğraf kaydediliyor
-                       }
 
-                       // Kullanıcının ilgi alanlarını çekiyoruz
-                       var interests = await _context.Ilgiler
-                           .Where(i => i.ID == userId)
-                           .Include(i => i.Category)
-                           .ToListAsync();
+            _context.Katilimcilar.Remove(participant);
+            await _context.SaveChangesAsync();
 
-                       // Kullanıcı bilgileri ve ilgi alanlarıyla ProfileViewModel oluşturuyoruz
-                       var profileViewModel = new ProfileViewModel
-                       {
-                           User = user,
-                          Interests = interests
-                       };
+            var pointsToDeduct = 10;  
+            DeductPoints(userId, pointsToDeduct);
 
-                       var result = await _userManager.UpdateAsync(user);
-                       if (result.Succeeded)
-                       {
-                           return View(profileViewModel); // Profil güncelleme başarılıysa profile view'ına yönlendiriyoruz
-                       }
+            ViewBag.SuccessMessage = "Etkinlikten başarıyla çıkıldı!";
+            return RedirectToAction("Profile"); 
+        }
 
-                       foreach (var error in result.Errors)
-                       {
-                           ModelState.AddModelError("", error.Description);
-                       }
-                   }
-               }
+        private void DeductPoints(string userId, int points)
+        {
+          
+            var userPoints = _context.Puanlar
+                .FirstOrDefault(p => p.KullaniciID == userId);
 
-               return View(model);  // Profil güncelleme başarısızsa tekrar formu gösteriyoruz
-           }*/
+            if (userPoints != null)
+            {
+                userPoints.Puanlar -= points;
+                _context.SaveChanges();
+            }
+        }
 
         public IActionResult Olustur()
         {
             return RedirectToAction("Create", "Etkinlik");
         }
+        public void AddPoints(string kullaniciId, int points)
+        {
+          
+            var yeniPuan = new Puan
+            {
+                KullaniciID = kullaniciId,
+                Puanlar = points,
+                KazanilanTarih = DateTime.Now
+            };
 
+    
+            _context.Puanlar.Add(yeniPuan);
+            _context.SaveChanges();
+            var notificationService = new NotificationService(_context);
+
+
+            var notificationMessage = $"{points} puan kazandınız! Yeni toplam puanlarınızı kontrol edin.";
+
+            
+            notificationService.AddNotificationAsync(kullaniciId, notificationMessage).Wait();
+        }
+       
         [HttpPost]
         [Authorize(Roles = "User")]
         public async Task<IActionResult> JoinEvent(int eventId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            // Kullanıcı ve etkinlik bilgilerini alıyoruz
             var user = await _userManager.FindByIdAsync(userId);
             var etkinlik = await _context.Etkinlikler.FindAsync(eventId);
 
             if (user == null || etkinlik == null)
             {
-                return NotFound("Kullanıcı veya etkinlik bulunamadı.");
+                TempData["EventJoinErrorMessage"] = "Kullanıcı veya etkinlik bulunamadı.";
+                return RedirectToAction("Profile");
             }
 
-            // Kullanıcı daha önce katıldıysa eklemeyin
+        
+            if (etkinlik.Tarih.Add(etkinlik.Saat) < DateTime.Now)
+            {
+                TempData["EventJoinErrorMessage"] = "Malesef katılamazsınız, etkinlik geçmişte.";
+                return RedirectToAction("Profile");
+            }
+
+ 
+            var userEvents = _context.Katilimcilar
+                .Where(k => k.KullaniciID == userId)
+                .Include(k => k.Etkinlik)
+                .Select(k => k.Etkinlik)
+                .ToList();
+
+     
+            bool isTimeConflict = userEvents.Any(e =>
+                (etkinlik.Tarih.Add(etkinlik.Saat) < e.Tarih.Add(e.Saat.Add(TimeSpan.FromMinutes(e.EtkinlikSuresi))) &&
+                 etkinlik.Tarih.Add(etkinlik.Saat.Add(TimeSpan.FromMinutes(etkinlik.EtkinlikSuresi))) > e.Tarih.Add(e.Saat)));
+
             var alreadyJoined = _context.Katilimcilar.Any(k => k.KullaniciID == userId && k.EtkinlikID == eventId);
             if (alreadyJoined)
             {
-                return RedirectToAction("Oneriler");
+                TempData["EventJoinErrorMessage"] = "Bu etkinliğe zaten katıldınız!";
+                return RedirectToAction("Profile");
             }
 
-            // Katılım tablosuna ekliyoruz
+            if (isTimeConflict)
+            {
+                
+                TempData["EventJoinErrorMessage"] = "Seçtiğiniz etkinlik, mevcut etkinliklerinizle zaman çakışıyor! Ancak aynı kategorideki başka bir etkinlik öneriyoruz.";
+
+          
+                var categoryId = etkinlik.CategoryID;
+
+                
+                var joinedEventIds = await _context.Katilimcilar
+                    .Where(k => k.KullaniciID == userId)
+                    .Select(k => k.EtkinlikID)
+                    .ToListAsync();
+
+                var eventRecommendations = await _context.Etkinlikler
+                    .Where(e => e.CategoryID == categoryId &&
+                                e.Tarih >= DateTime.Now &&  
+                                e.IsApproved == true &&     
+                                !joinedEventIds.Contains(e.ID)) 
+                    .ToListAsync();
+
+                var eventRecommendationsJson = JsonConvert.SerializeObject(eventRecommendations);
+                TempData["EventRecommendations"] = eventRecommendationsJson;
+
+                return RedirectToAction("Profile");
+            }
+
+    
             var katilimci = new Katilimci
             {
                 KullaniciID = userId,
@@ -171,9 +367,80 @@ namespace Yazlab_2.Controllers
             _context.Katilimcilar.Add(katilimci);
             await _context.SaveChangesAsync();
 
-            // Başarılı katılım sonrası önerilere dönüyoruz
-            return RedirectToAction("Oneriler");
+     
+            AddPoints(userId, _context.Katilimcilar.Count(k => k.KullaniciID == userId) == 1 ? 20 : 10);
+
+            TempData["EventJoinSuccessMessage"] = "Etkinliğe başarıyla katıldınız!";
+            return RedirectToAction("Profile");
         }
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> FeedbackForm()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+  
+            var pastEvents = await _context.Katilimcilar
+                .Where(k => k.KullaniciID == userId)
+                .Select(k => k.Etkinlik)
+                .Where(e => e.Tarih < DateTime.Now.Date ||
+                            (e.Tarih == DateTime.Now.Date && e.Saat < DateTime.Now.TimeOfDay)) 
+                .ToListAsync();
+
+            return View(pastEvents);
+        }
+
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> SendFeedback(int eventId, string feedback, int rating)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+           
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                TempData["ErrorMessage"] = "Kullanıcı bulunamadı.";
+                return RedirectToAction("FeedbackForm");
+            }
+
+   
+            var etkinlik = await _context.Etkinlikler.FindAsync(eventId);
+            if (etkinlik == null || etkinlik.Tarih.Add(etkinlik.Saat) > DateTime.Now)
+            {
+                TempData["ErrorMessage"] = "Geçersiz etkinlik.";
+                return RedirectToAction("FeedbackForm");
+            }
+
+          
+            var isUserJoined = await _context.Katilimcilar
+                .AnyAsync(k => k.KullaniciID == userId && k.EtkinlikID == eventId);
+
+            if (!isUserJoined)
+            {
+                TempData["ErrorMessage"] = "Bu etkinliğe katılmadınız, geri bildirim gönderemezsiniz.";
+                return RedirectToAction("FeedbackForm");
+            }
+
+ 
+            var message = $"{user.UserName} adlı kullanıcı '{etkinlik.EtkinlikAdi}' etkinliği için geri bildirim gönderdi: {feedback} (Puan: {rating}/5)";
+
+            
+            await _notificationService.AddAdminNotificationAsync(message);
+
+            var pastEvents = await _context.Katilimcilar
+                .Where(k => k.KullaniciID == userId)
+                .Select(k => k.Etkinlik)
+                .Where(e => e.ID != eventId && (e.Tarih < DateTime.Now.Date ||
+                                                (e.Tarih == DateTime.Now.Date && e.Saat < DateTime.Now.TimeOfDay))) 
+                .ToListAsync();
+
+            TempData["SuccessMessage1"] = "Geri bildiriminiz başarıyla gönderildi!";
+            return View("FeedbackForm", pastEvents);  
+        }
+
+
 
         [HttpGet]
         [Authorize(Roles = "User")]
@@ -181,11 +448,11 @@ namespace Yazlab_2.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            // Kullanıcının katıldığı etkinlikleri alıyoruz
+  
             var joinedEvents = _context.Katilimcilar
                 .Where(k => k.KullaniciID == userId)
                 .Include(k => k.Etkinlik)
-                .ThenInclude(e => e.User) // Etkinliği oluşturan kullanıcıyı da dahil ediyoruz
+                .ThenInclude(e => e.User) 
                 .Select(k => k.Etkinlik)
                 .ToList();
 
@@ -197,13 +464,12 @@ namespace Yazlab_2.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            // Etkinlikteki katılımcıyı kontrol ediyoruz
             var isParticipant = _context.Katilimcilar
                 .Any(k => k.KullaniciID == userId && k.EtkinlikID == eventId);
 
             if (!isParticipant)
             {
-                return RedirectToAction("Profile"); // Eğer kullanıcı etkinliğe katılmadıysa profile yönlendirilsin
+                return RedirectToAction("Profile"); 
             }
 
             var eventMessages = _context.Mesajlar
@@ -226,7 +492,6 @@ namespace Yazlab_2.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            // Katılımcı olup olmadığını kontrol ediyoruz
             var isParticipant = _context.Katilimcilar
                 .Any(k => k.KullaniciID == userId && k.EtkinlikID == eventId);
 
@@ -245,12 +510,12 @@ namespace Yazlab_2.Controllers
 
             _context.Mesajlar.Add(newMessage);
             await _context.SaveChangesAsync();
+            await _notificationService.NotifyParticipantsAsync(eventId, userId, message);
 
             return RedirectToAction("Messages", new { eventId });
         }
 
 
-       
         [HttpGet]
         [Authorize(Roles = "User")]
         public async Task<IActionResult> EditUser()
@@ -267,26 +532,22 @@ namespace Yazlab_2.Controllers
                 return NotFound("Kullanıcı bulunamadı.");
             }
 
-            // Kullanıcının ilgi alanlarını alıyoruz
             var userInterests = await _context.Ilgiler
                 .Where(i => i.ID == userId)
                 .ToListAsync();
 
-            // Kategorileri alıyoruz
             var categories = await _context.Kategoriler.ToListAsync();
 
             var model = new ProfileViewModel
             {
                 User = user,
-                SelectedInterests = userInterests.Select(i => i.CategoryID).ToList(),  // Kullanıcının seçtiği ilgi alanlarının ID'leri
-                Categories = categories,  // Kategoriler
-                ProfilePicture = null // Şu an için null, formda mevcut fotoğrafı göstermeyi unutmayın
+                SelectedInterests = userInterests.Select(i => i.CategoryID).ToList(),
+                Categories = categories,  
+                ProfilePicture = null 
             };
 
             return View(model);
         }
-
-
 
         [HttpPost]
         [Authorize(Roles = "User")]
@@ -304,13 +565,16 @@ namespace Yazlab_2.Controllers
                 return NotFound("Kullanıcı bulunamadı.");
             }
 
-            // Kullanıcı bilgilerini güncelle
+         
             user.UserName = model.User.UserName;
             user.Email = model.User.Email;
             user.FirstName = model.User.FirstName;
             user.LastName = model.User.LastName;
+            user.Konum = model.Konum;
+            user.BirthDate=model.User.BirthDate;
+            user.PhoneNumber = model.User.PhoneNumber;
 
-            // Profil fotoğrafı güncellenmesi
+
             if (model.ProfilePicture != null && model.ProfilePicture.Length > 0)
             {
                 var folderPath = Path.Combine("wwwroot", "images", "profiles");
@@ -328,21 +592,17 @@ namespace Yazlab_2.Controllers
                 user.ProfilePicture = $"/images/profiles/{model.ProfilePicture.FileName}";
             }
 
-            // İlgi alanlarını güncelle
             var currentInterests = await _context.Ilgiler
                 .Where(i => i.ID == userId)
                 .ToListAsync();
 
-            // Seçilen ilgi alanlarını alın
             var selectedInterestIds = model.SelectedInterests;
 
-            // Önce mevcut ilgi alanlarını sil
             foreach (var interest in currentInterests)
             {
                 _context.Ilgiler.Remove(interest);
             }
 
-            // Yeni seçilen ilgi alanlarını ekle
             foreach (var selectedCategoryId in selectedInterestIds)
             {
                 _context.Ilgiler.Add(new Interest
@@ -362,15 +622,13 @@ namespace Yazlab_2.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            // Kullanıcının ilgi alanlarını al
             var userInterests = _context.Ilgiler
                 .Where(i => i.ID == userId)
                 .Select(i => i.CategoryID)
                 .ToList();
 
-            // İlgi alanlarına uygun etkinlikleri al
             var recommendations = _context.Etkinlikler
-                .Where(e => userInterests.Contains(e.CategoryID) && e.Tarih >= DateTime.Now) // Gelecek etkinlikler
+                .Where(e => userInterests.Contains(e.CategoryID) && e.Tarih >= DateTime.Now) 
                 .ToList();
 
             return View(recommendations);
@@ -380,7 +638,6 @@ namespace Yazlab_2.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            // Kullanıcının geçmişte katıldığı etkinliklerin kategorilerini al
             var pastEventCategories = _context.Katilimcilar
                 .Where(k => k.KullaniciID == userId)
                 .Include(k => k.Etkinlik)
@@ -388,7 +645,6 @@ namespace Yazlab_2.Controllers
                 .Distinct()
                 .ToList();
 
-            // Gelecekteki benzer kategorideki etkinlikleri öner
             var recommendations = _context.Etkinlikler
                 .Where(e => pastEventCategories.Contains(e.CategoryID) && e.Tarih >= DateTime.Now)
                 .ToList();
@@ -396,131 +652,55 @@ namespace Yazlab_2.Controllers
             return View(recommendations);
         }
 
-        [HttpGet]
-        public IActionResult KonumaGoreOneriler()
+
+private static (double Latitude, double Longitude) ParseCoordinates(string location)
+    {
+ 
+        var parts = location.Split(',');
+
+        if (parts.Length == 2)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            // Kullanıcının konumunu al
-            var userLocation = _context.Users
-                .Where(u => u.Id == userId)
-                .Select(u => u.Konum)
-                .FirstOrDefault();
+            string latitudePart = parts[0].Trim();
+            string longitudePart = parts[1].Trim();
 
-            if (string.IsNullOrEmpty(userLocation))
-            {
-                return BadRequest("Kullanıcının konum bilgisi mevcut değil.");
-            }
-
-            // Kullanıcının enlem ve boylam bilgilerini ayır
-            var userCoordinates = ParseCoordinates(userLocation);
-
-            // Tüm etkinliklerin listesini al ve koordinatlarını kontrol et
-            var recommendations = _context.Etkinlikler
-                .AsEnumerable() // Veritabanı sorgusundan sonra LINQ kullanmak için
-                .Where(e =>
-                {
-                    var eventCoordinates = ParseCoordinates(e.Konum);
-
-                    // Haversine formülü ile mesafeyi hesapla (30 km'ye kadar olan etkinlikler)
-                    var distance = CalculateDistance(userCoordinates.Latitude, userCoordinates.Longitude, eventCoordinates.Latitude, eventCoordinates.Longitude);
-                    return distance <= 30 && e.Tarih >= DateTime.Now;
-                })
-                .ToList();
-
-            return View(recommendations);
-        }
-        private static (double Latitude, double Longitude) ParseCoordinates(string location)
-        {
-            var parts = location.Split(',');
-            if (parts.Length == 2 &&
-                double.TryParse(parts[0], out double latitude) &&
-                double.TryParse(parts[1], out double longitude))
+   
+            if (double.TryParse(latitudePart, NumberStyles.Any, CultureInfo.InvariantCulture, out double latitude) &&
+                double.TryParse(longitudePart, NumberStyles.Any, CultureInfo.InvariantCulture, out double longitude))
             {
                 return (latitude, longitude);
             }
-            throw new ArgumentException("Geçersiz konum formatı.");
+            else
+            {
+                throw new ArgumentException("Geçersiz enlem ve boylam formatı.");
+            }
         }
-        private static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
+        else
         {
-            const double R = 6371; // Dünya'nın yarıçapı (km cinsinden)
-            var lat1Rad = ToRadians(lat1);
-            var lon1Rad = ToRadians(lon1);
-            var lat2Rad = ToRadians(lat2);
-            var lon2Rad = ToRadians(lon2);
+            throw new ArgumentException("Konum bilgisi geçerli formatta değil.");
+        }
+    }
 
-            var dLat = lat2Rad - lat1Rad;
-            var dLon = lon2Rad - lon1Rad;
+
+    private static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
+        {
+            const double R = 6371; 
+            var dLat = ToRadians(lat2 - lat1);
+            var dLon = ToRadians(lon2 - lon1);
 
             var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
-                    Math.Cos(lat1Rad) * Math.Cos(lat2Rad) *
+                    Math.Cos(ToRadians(lat1)) * Math.Cos(ToRadians(lat2)) *
                     Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+
             var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
 
-            return R * c; // Mesafe km cinsinden
+            return R * c; 
         }
 
         private static double ToRadians(double degrees)
         {
             return degrees * Math.PI / 180;
         }
-
-
-        [HttpGet]
-        [Authorize(Roles = "User")]
-        public IActionResult Oneriler()
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            // Kullanıcının katıldığı etkinliklerin ID'lerini alın
-            var joinedEventIds = _context.Katilimcilar
-                .Where(k => k.KullaniciID == userId)
-                .Select(k => k.EtkinlikID)
-                .ToList();
-
-            // İlgi alanlarına göre öneriler
-            var userInterests = _context.Ilgiler
-                .Where(i => i.ID == userId)
-                .Select(i => i.CategoryID)
-                .ToList();
-
-            var interestRecommendations = _context.Etkinlikler
-                .Where(e => userInterests.Contains(e.CategoryID) && e.Tarih >= DateTime.Now && !joinedEventIds.Contains(e.ID))
-                .ToList();
-
-            // Geçmiş etkinliklere göre öneriler
-            var pastEventCategories = _context.Katilimcilar
-                .Where(k => k.KullaniciID == userId)
-                .Include(k => k.Etkinlik)
-                .Select(k => k.Etkinlik.CategoryID)
-                .Distinct()
-                .ToList();
-
-            var pastEventRecommendations = _context.Etkinlikler
-                .Where(e => pastEventCategories.Contains(e.CategoryID) && e.Tarih >= DateTime.Now && !joinedEventIds.Contains(e.ID))
-                .ToList();
-
-            // Konuma göre öneriler
-            var userLocation = _context.Users
-                .Where(u => u.Id == userId)
-                .Select(u => u.Konum)
-                .FirstOrDefault();
-
-            var locationRecommendations = _context.Etkinlikler
-                .Where(e => e.Konum == userLocation && e.Tarih >= DateTime.Now && !joinedEventIds.Contains(e.ID))
-                .ToList();
-
-            // ViewModel ile tüm önerileri birleştir
-            var model = new RecommendationViewModel
-            {
-                InterestBased = interestRecommendations,
-                PastEventBased = pastEventRecommendations,
-                LocationBased = locationRecommendations
-            };
-
-            return View(model);
-        }
-
 
 
     }

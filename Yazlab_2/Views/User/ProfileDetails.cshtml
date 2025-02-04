@@ -1,0 +1,170 @@
+﻿@model Yazlab_2.Models.ViewModel.ProfileViewModel
+
+<h2 class="page-title">Profil Detayları</h2>
+
+<div class="profile-details-container">
+    <!-- Profil Resmi -->
+    <div class="profile-picture-container">
+        <img src="@(Model.User.ProfilePicture ?? "/images/default-profile.png")" alt="Profile Picture" class="profile-picture" />
+    </div>
+
+    <!-- Kullanıcı Bilgileri Formu -->
+    <div class="form-row">
+        <div class="form-group">
+            <!-- FirstName ve LastName'i doğrudan yazı olarak gösterelim -->
+            <span class="form-control-plaintext user-name">
+                @Model.User.FirstName @Model.User.LastName
+            </span>
+        </div>
+    </div>
+
+    <!-- Diğer Formlar -->
+    <div class="form-group">
+        <label asp-for="User.Email" class="form-label"></label>
+        <input asp-for="User.Email" class="form-control" type="email" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="User.BirthDate" class="form-label"></label>
+        <input asp-for="User.BirthDate" class="form-control" type="date" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="User.Gender" class="form-label"></label>
+        <select asp-for="User.Gender" class="form-control">
+            <option value="Male">Erkek</option>
+            <option value="Female">Kadın</option>
+            <option value="Other">Diğer</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="User.PhoneNumber" class="form-label"></label>
+        <input asp-for="User.PhoneNumber" class="form-control" type="tel" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="User.Konum" class="form-label"></label>
+        <input asp-for="User.Konum" class="form-control" />
+    </div>
+
+    <h3 class="interests-title">İlgi Alanları</h3>
+    @if (Model.Interests != null && Model.Interests.Any())
+    {
+        <ul class="interests-list">
+            @foreach (var interest in Model.Interests)
+            {
+                <li>@interest.Category.CategoryName</li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p>Henüz ilgi alanı eklemediniz.</p>
+    }
+
+    <!-- Profili Düzenle Butonu -->
+    <div class="mb-3">
+        <a asp-action="EditUser" asp-controller="User" asp-route-userId="@(Model.User.Id)" class="btn btn-su-yesili">Profili Düzenle</a>
+    </div>
+</div>
+
+<style>
+    /* Sayfa Genel Başlık */
+    .page-title {
+        text-align: center;
+        color: #333;
+        font-size: 2rem;
+        margin-bottom: 20px;
+    }
+
+    /* Profil Detayları Konteyneri */
+    .profile-details-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background-color: #f1fdf7; /* Daha açık su yeşili arka plan */
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Profil Resmi Konteyneri */
+    .profile-picture-container {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .profile-picture {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #56c2a3; /* Su yeşili sınır */
+    }
+
+    /* FirstName ve LastName metni */
+    .user-name {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #333;
+        display: block;
+        text-align: center; /* Ortalama */
+        margin-top: 10px;
+    }
+
+    /* Form Etiketleri */
+    .form-label {
+        font-weight: bold;
+        color: #333;
+    }
+
+    /* Form Giriş Alanları */
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+        border: 1px solid #56c2a3; /* Su yeşili sınır */
+        box-sizing: border-box;
+    }
+
+        .form-control:focus {
+            border-color: #56c2a3; /* Su yeşili focus efekti */
+            box-shadow: 0 0 5px rgba(86, 194, 163, 0.5); /* Su yeşili odak efekti */
+        }
+
+    /* İlgi Alanları Başlık */
+    .interests-title {
+        color: #333;
+        font-size: 1.5rem;
+        margin-top: 20px;
+    }
+
+    /* İlgi Alanları Liste Stili */
+    .interests-list {
+        list-style-type: none;
+        padding: 0;
+    }
+
+        .interests-list li {
+            background-color: #e1f7f2; /* Açık su yeşili arka plan */
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+
+    /* Düzenle Butonu */
+    .btn-su-yesili {
+        background-color: #56c2a3; /* Su yeşili */
+        color: white;
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+        .btn-su-yesili:hover {
+            background-color: #4ea58e; /* Hover efekti için daha koyu su yeşili */
+        }
+</style>

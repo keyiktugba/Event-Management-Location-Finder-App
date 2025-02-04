@@ -1,0 +1,126 @@
+﻿@using Yazlab_2.Models.EntityBase
+@model List<Etkinlik>
+
+<h2 class="text-center my-4 text-su-yesili" style="font-family: 'Poppins', sans-serif; font-weight: 600;">Geçmiş Etkinlikleriniz</h2>
+<p class="text-center text-koyu-yesil mb-5" style="font-family: 'Poppins', sans-serif;">Aşağıdaki etkinlikler için geri bildirim verebilirsiniz:</p>
+
+<table class="table table-bordered table-striped" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+    <thead>
+        <tr class="text-su-yesili">
+            <th>Etkinlik Adı</th>
+            <th>Tarih</th>
+            <th>Geri Bildirim</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var etkinlik in Model)
+        {
+            <tr>
+                <td>@etkinlik.EtkinlikAdi</td>
+                <td>@etkinlik.Tarih.ToString("dd MMM yyyy")</td>
+                <td>
+                    <!-- Geri Bildirim Formu -->
+                    <form asp-action="SendFeedback" method="post" class="feedback-form">
+                        <input type="hidden" name="eventId" value="@etkinlik.ID" />
+                        <div class="form-group">
+                            <textarea name="feedback" class="form-control" placeholder="Geri bildiriminizi buraya yazın..." required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="rating" class="text-koyu-yesil">Puan:</label>
+                            <select name="rating" class="form-control" required>
+                                <option value="1">1 Yıldız</option>
+                                <option value="2">2 Yıldız</option>
+                                <option value="3">3 Yıldız</option>
+                                <option value="4">4 Yıldız</option>
+                                <option value="5">5 Yıldız</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-su-yesili btn-block">Geri Bildirim Gönder</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<style>
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #f0f8f0;
+        padding: 30px;
+    }
+
+    h2 {
+        color: #56c2a3;
+        font-size: 2.5rem;
+        font-weight: 600;
+    }
+
+    .text-su-yesili {
+        color: #56c2a3;
+    }
+
+    .text-koyu-yesil {
+        color: #1a6b5c;
+    }
+
+    .table {
+        width: 100%;
+        margin-bottom: 40px;
+        background-color: #fff;
+        border-radius: 10px;
+        border: 1px solid #ddd;
+    }
+
+    .table th, .table td {
+        padding: 15px;
+        text-align: left;
+        font-size: 16px;
+    }
+
+    .table th {
+        background-color: #f0f8f0;
+        font-weight: 600;
+        color: #1a6b5c;
+    }
+
+    .table-striped tbody tr:nth-child(odd) {
+        background-color: #f9f9f9;
+    }
+
+    .feedback-form .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-control {
+        border-radius: 10px;
+        border: 2px solid #ddd;
+        padding: 15px;
+        font-size: 14px;
+        transition: all 0.3s ease-in-out;
+    }
+
+    .form-control:focus {
+        border-color: #56c2a3;
+        box-shadow: 0 0 8px rgba(86, 194, 163, 0.4);
+    }
+
+    .btn-su-yesili {
+        background-color: #56c2a3;
+        color: white;
+        border: none;
+        padding: 14px;
+        font-size: 16px;
+        border-radius: 25px;
+        font-weight: 600;
+    }
+
+    .btn-su-yesili:hover {
+        background-color: #4ea58e;
+    }
+
+    .alert {
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+</style>

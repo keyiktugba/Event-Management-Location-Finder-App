@@ -1,45 +1,67 @@
 ﻿@model IEnumerable<Yazlab_2.Models.EntityBase.Etkinlik>
 @{
-    ViewData["Title"] = "Pending Events";
+    ViewData["Title"] = "Onaylanacak Etkinlikler";
 }
 
-<h2>Onaylanacak Etkinlikler</h2>
+<h2 class="text-center mb-4 text-primary" style="font-family: 'Arial', sans-serif;">🎉 Onaylanacak Etkinlikler 🎉</h2>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Etkinlik Adı</th>
-            <th>Açıklama</th>
-            <th>Tarih</th>
-            <th>Saat</th>
-            <th>Konum</th>
-            <th>Kategori</th>
-            <th>Kullanıcı</th>
-            <th>Onay</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var etkinlik in Model)
-        {
+<!-- Success and Error Message Alerts -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert" style="background-color: #DFF0D8; border-color: #D6E9C6;">
+        @TempData["SuccessMessage"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" style="background-color: #F2DEDE; border-color: #EBCCBC;">
+        @TempData["ErrorMessage"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+
+<div class="table-responsive mt-4">
+    <table class="table table-bordered table-striped">
+        <thead class="thead-light" style="background-color: #FFFBF0;">
             <tr>
-                <td>@etkinlik.EtkinlikAdi</td>
-                <td>@etkinlik.Aciklama</td>
-                <td>@etkinlik.Tarih.ToShortDateString()</td>
-                <td>@etkinlik.Saat</td>
-                <td>@etkinlik.Konum</td>
-                <td>@etkinlik.Category.CategoryName</td>
-                <td>@etkinlik.User.UserName</td>
-                <td>
-                    <form asp-action="ApproveEvent" asp-controller="Admin" method="post">
-                        <input type="hidden" name="id" value="@etkinlik.ID" />
-                        <button type="submit" class="btn btn-success">Onayla</button>
-                    </form>
-                    <form asp-action="RejectEvent" asp-controller="Admin" method="post" style="display:inline;">
-                        <input type="hidden" name="id" value="@etkinlik.ID" />
-                        <button type="submit" class="btn btn-danger">Reddet</button>
-                    </form>
-                </td>
+                <th>Etkinlik Adı</th>
+                <th>Açıklama</th>
+                <th>Tarih</th>
+                <th>Saat</th>
+                <th>Konum</th>
+                <th>Kategori</th>
+                <th>Kullanıcı</th>
+                <th>Onay</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var etkinlik in Model)
+            {
+                <tr style="background-color: #FFFBF0;">
+                    <td>@etkinlik.EtkinlikAdi</td>
+                    <td>@etkinlik.Aciklama</td>
+                    <td>@etkinlik.Tarih.ToShortDateString()</td>
+                    <td>@etkinlik.Saat</td>
+                    <td>@etkinlik.Konum</td>
+                    <td>@etkinlik.Category.CategoryName</td>
+                    <td>@etkinlik.User.UserName</td>
+                    <td class="d-flex">
+                        <form asp-action="ApproveEvent" asp-controller="Admin" method="post" style="margin-right: 5px;">
+                            <input type="hidden" name="id" value="@etkinlik.ID" />
+                            <button type="submit" class="btn btn-success btn-sm" style="background-color: #28A745; border-color: #28A745;">✔️ Onayla</button>
+                        </form>
+                        <form asp-action="RejectEvent" asp-controller="Admin" method="post" style="display:inline;">
+                            <input type="hidden" name="id" value="@etkinlik.ID" />
+                            <button type="submit" class="btn btn-danger btn-sm" style="background-color: #DC3545; border-color: #DC3545;">❌ Reddet</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

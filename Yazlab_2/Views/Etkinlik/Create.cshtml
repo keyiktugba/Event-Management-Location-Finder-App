@@ -1,62 +1,228 @@
 ﻿@model Yazlab_2.Models.ViewModel.EtkinlikRegisterViewModel
 
-<h2>Etkinlik Oluştur</h2>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etkinlik Oluştur</title>
 
-<form asp-action="Create" asp-controller="Etkinlik" method="post">
-    <div class="form-group">
-        <label asp-for="EtkinlikAdi" class="control-label"></label>
-        <input asp-for="EtkinlikAdi" class="form-control" />
-        <span asp-validation-for="EtkinlikAdi" class="text-danger"></span>
+    <style>
+        /* Genel sayfa düzeni */
+        .container {
+            margin-top: 30px;
+            background-color: #e8f5f2; /* Su yeşili arka plan */
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Modern yazı tipi */
+        }
+
+        /* Başlık stil */
+        h2 {
+            font-size: 32px;
+            font-weight: bold;
+            color: #00b894; /* Su yeşili başlık rengi */
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        /* Hata ve başarı mesajları */
+        .alert {
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 16px;
+        }
+
+        /* Başarı mesajı */
+        .alert-success {
+            background-color: #DFF0D8;
+            border-color: #D6E9C6;
+            color: #3c763d;
+        }
+
+        /* Hata mesajı */
+        .alert-danger {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        /* Form elemanları */
+        .form-group label {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Input alanları */
+        .form-control {
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            padding: 12px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+            /* Focus durumda input alanları */
+            .form-control:focus {
+                border-color: #00b894; /* Su yeşili */
+                box-shadow: 0 0 5px rgba(0, 184, 148, 0.5);
+            }
+
+        /* Butonlar */
+        .btn {
+            border-radius: 50px;
+            font-weight: bold;
+            padding: 15px 30px;
+            text-transform: uppercase;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: #00b894; /* Su yeşili buton rengi */
+            border: none;
+            color: white;
+        }
+
+            .btn-primary:hover {
+                background-color: #009c73; /* Koyu yeşil */
+                transform: translateY(-2px);
+            }
+
+        /* Harita alanı */
+        #map {
+            width: 100%;
+            height: 300px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Select element */
+        .select2-container--default .select2-selection--single {
+            height: 45px;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            transition: border-color 0.3s ease;
+        }
+
+            .select2-container--default .select2-selection--single:focus {
+                border-color: #00b894;
+            }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>🎉 Etkinlik Oluştur 🎉</h2>
+
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCSc3WNHjhSATknV-Y7RX4ZhBFDJKbm868&callback=initMap" async defer></script>
+        <script>
+            let map, marker;
+
+            function initMap() {
+                const initialLocation = { lat: 41.0082, lng: 28.9784 }; // Varsayılan konum: İstanbul
+                map = new google.maps.Map(document.getElementById("map"), {
+                    center: initialLocation,
+                    zoom: 13,
+                });
+
+                marker = new google.maps.Marker({
+                    position: initialLocation,
+                    map: map,
+                    draggable: true,
+                });
+
+                // Marker'ı sürüklediğinizde Konum input alanını güncelle
+                marker.addListener("dragend", () => {
+                    const position = marker.getPosition();
+                    document.getElementById("konum").value =
+                        position.lat().toFixed(6) + ", " + position.lng().toFixed(6);
+                });
+
+                // Harita üzerine tıklanma işlevi: yeni konum belirleme
+                map.addListener("click", (e) => {
+                    marker.setPosition(e.latLng);
+                    document.getElementById("konum").value =
+                        e.latLng.lat().toFixed(6) + ", " + e.latLng.lng().toFixed(6);
+                });
+            }
+
+            // Sayfa yüklendiğinde bugünün tarihini tarih inputuna atama
+            window.onload = function () {
+                const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD formatı
+                document.getElementById("Tarih").value = today;
+            };
+        </script>
+
+        <form asp-action="Create" asp-controller="Etkinlik" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label asp-for="EtkinlikAdi" class="control-label">Etkinlik Adı</label>
+                <input asp-for="EtkinlikAdi" class="form-control" />
+                <span asp-validation-for="EtkinlikAdi" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Aciklama" class="control-label">Açıklama</label>
+                <textarea asp-for="Aciklama" class="form-control"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Tarih" class="control-label">Tarih</label>
+                <input asp-for="Tarih" id="Tarih" class="form-control" type="date" />
+                <span asp-validation-for="Tarih" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Saat" class="control-label">Saat</label>
+                <input asp-for="Saat" class="form-control" />
+                <span asp-validation-for="Saat" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="EtkinlikSuresi" class="control-label">Etkinlik Süresi</label>
+                <input asp-for="EtkinlikSuresi" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label>Konum</label>
+                <div id="map"></div>
+                <input id="konum" asp-for="Konum" class="form-control" readonly />
+                <span asp-validation-for="Konum" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="CategoryID" class="control-label">Kategori</label>
+                <select asp-for="CategoryID" class="form-control" asp-items="@(ViewData["CategoryList"] as SelectList)">
+                    <option value="">Bir kategori seçin</option>
+                </select>
+                <span asp-validation-for="CategoryID" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="EventPicture">Etkinlik Fotoğrafı</label>
+                <input asp-for="EventPicture" class="form-control" type="file" />
+                <span asp-validation-for="EventPicture" class="text-danger"></span>
+            </div>
+
+            <input type="hidden" asp-for="UserID" />
+
+            <button type="submit" class="btn btn-primary">Etkinlik Oluştur</button>
+        </form>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+        }
     </div>
 
-    <div class="form-group">
-        <label asp-for="Aciklama" class="control-label"></label>
-        <textarea asp-for="Aciklama" class="form-control"></textarea>
-    </div>
-
-    <div class="form-group">
-        <label asp-for="Tarih" class="control-label"></label>
-        <input asp-for="Tarih" class="form-control" />
-        <span asp-validation-for="Tarih" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
-        <label asp-for="Saat" class="control-label"></label>
-        <input asp-for="Saat" class="form-control" />
-        <span asp-validation-for="Saat" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
-        <label asp-for="EtkinlikSuresi" class="control-label"></label>
-        <input asp-for="EtkinlikSuresi" class="form-control" />
-    </div>
-
-    <div class="form-group">
-        <label asp-for="Konum" class="control-label"></label>
-        <input asp-for="Konum" class="form-control" />
-        <span asp-validation-for="Konum" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
-        <label asp-for="CategoryID" class="control-label"></label>
-        <select asp-for="CategoryID" class="form-control" asp-items="@(ViewData["CategoryList"] as SelectList)">
-            <option value="">Bir kategori seçin</option>
-        </select>
-        <span asp-validation-for="CategoryID" class="text-danger"></span>
-    </div>
-
-    <!-- Gizli UserID alanı -->
-    <input type="hidden" asp-for="UserID" />
-
-    <button type="submit" class="btn btn-primary">Etkinlik Oluştur</button>
-</form>
-
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    @section Scripts {
+        @Html.PartialAsync("_ValidationScriptsPartial")
     }
-}
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
-}
+
+</body>
+</html>
+
